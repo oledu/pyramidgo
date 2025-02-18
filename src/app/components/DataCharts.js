@@ -1,0 +1,61 @@
+'use client'
+import { useEffect, useState } from 'react'
+import { fetchSheetData } from '../services/api'
+import ClimbingTable from './ClimbingTable'
+import GymBarChart from './GymBarChart'
+
+const DataCharts = () => {
+  const [data, setData] = useState([])
+
+  useEffect(() => {
+    const getData = async () => {
+      try {
+        const validData = await fetchSheetData()
+        setData(validData)
+      } catch (error) {
+        console.error('Failed to fetch data:', error)
+      }
+    }
+
+    getData()
+  }, [])
+
+  return (
+    <div className="flex justify-center w-full mt-10 mb-10">
+      <div
+        style={{
+          minWidth: '350px',
+          width: '90%',
+          maxWidth: '1600px',
+          backgroundColor: 'rgba(255, 255, 255, 0.2)',
+          borderRadius: '10px',
+        }}
+        className="flex flex-col p-5"
+      >
+        <div className="text-white text-center mb-4">
+          <span className='title'>資料日期：2025/02/17</span>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 [1400px]:grid-cols-3 gap-4">
+          {/* 岩館統計圖表 */}
+          <GymBarChart data={data} />
+          {/* 其他圖表容器 */}
+          {[2, 3, 4, 5, 6].map((item) => (
+            <div
+              key={item}
+              style={{
+                minHeight: '300px',
+                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                borderRadius: '8px',
+              }}
+              // className="p-4"
+            >
+              圖表 {item}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default DataCharts 

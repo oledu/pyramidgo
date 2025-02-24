@@ -11,26 +11,20 @@ const DataCharts = dynamic(() => import('./components/DataCharts'), {
 
 export default function Home() {
   return (
-    <main>
+    <main className="flex min-h-screen flex-col items-center p-4">
       <Background3D />
-      <div>
-        {/* 標題區塊 */}
-        <div className="flex justify-center w-full mt-5">
-          <div
-            style={{
-              minWidth: '350px',
-              maxWidth: '500px',
-              backgroundColor: 'rgba(255, 255, 255, 0.2)',
-              borderRadius: '10px',
-            }}
-            className="title flex flex-col justify-center items-center p-5"
-          >
-            <h1>PYRAMID GO</h1>
-            <h2>攀岩金字塔俱樂部</h2>
-          </div>
-        </div>
-        <DataCharts />
+      <div className="w-full flex justify-center mt-5">
+        <img
+          src="/logo.png"  /* 請將圖片放在 public 資料夾中 */
+          alt="PYRAMID GO"
+          className="w-full max-w-[600px] min-w-[300px] h-auto"
+          style={{
+            objectFit: 'contain',
+          }}
+        />
       </div>
+
+      <DataCharts />
     </main>
   )
 }

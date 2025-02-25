@@ -1,24 +1,23 @@
-'use client'
-import { useEffect, useState } from 'react'
-import { fetchSheetData } from '../services/api'
-import ClimbingTable from './ClimbingTable'
-import GymBarChart from './GymBarChart'
+'use client';
+import { useAllData } from '../hooks/useData';
+import ClimbingTable from './ClimbingTable';
+import GymBarChart from './GymBarChart';
+import { calculateScores, calculatePompom } from '../utils/calculateScores';
 
 const DataCharts = () => {
-  const [data, setData] = useState([])
+  const { data, error } = useAllData();
 
-  useEffect(() => {
-    const getData = async () => {
-      try {
-        const validData = await fetchSheetData()
-        setData(validData)
-      } catch (error) {
-        console.error('Failed to fetch data:', error)
-      }
-    }
+  console.log('data', data);
 
-    getData()
-  }, [])
+  let scores = calculateScores(data);
+  console.log('scores', scores);
+
+  let pompom = calculatePompom(scores);
+  console.log('pompom', pompom);
+
+  // let teamPompom = pompom.
+
+  if (error) return <div>Error: {error}</div>;
 
   return (
     <div className="flex justify-center w-full mt-10 mb-10">
@@ -33,12 +32,9 @@ const DataCharts = () => {
         className="flex flex-col p-5"
       >
         <div className="text-white text-center mb-4">
-          <span className='title'>資料日期：2025/02/17</span>
+          <span className="title">資料日期：2025/02/17</span>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 [1400px]:grid-cols-3 gap-4">
-          {/* 岩館統計圖表 */}
-          <GymBarChart data={data} />
-          {/* 其他圖表容器 */}
           {[2, 3, 4, 5, 6, 7].map((item) => (
             <div
               key={item}
@@ -60,16 +56,16 @@ const DataCharts = () => {
               position: 'relative',
             }}
           >
-            <img 
-              src="/belay.link_qr.png" 
-              alt="belay link QR" 
+            <img
+              src="/belay.link_qr.png"
+              alt="belay link QR"
               className="absolute inset-0 w-full h-full object-contain p-4"
             />
           </div>
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default DataCharts 
+export default DataCharts;

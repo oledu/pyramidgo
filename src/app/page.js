@@ -1,13 +1,13 @@
-'use client'
-import dynamic from 'next/dynamic'
+'use client';
+import dynamic from 'next/dynamic';
 
 // 動態導入 Background3D 組件，並禁用 SSR
 const Background3D = dynamic(() => import('./components/Background3D'), {
-  ssr: false
-})
+  ssr: false,
+});
 const DataCharts = dynamic(() => import('./components/DataCharts'), {
-  ssr: false
-})
+  ssr: false,
+});
 
 export default function Home() {
   return (
@@ -15,7 +15,7 @@ export default function Home() {
       <Background3D />
       <div className="w-full flex justify-center mt-5">
         <img
-          src="/logo.png"  /* 請將圖片放在 public 資料夾中 */
+          src="/logo.png" /* 請將圖片放在 public 資料夾中 */
           alt="PYRAMID GO"
           className="w-full max-w-[600px] min-w-[300px] h-auto"
           style={{
@@ -26,5 +26,5 @@ export default function Home() {
 
       <DataCharts />
     </main>
-  )
+  );
 }

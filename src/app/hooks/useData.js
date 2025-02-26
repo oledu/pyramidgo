@@ -1,12 +1,5 @@
 import { useState, useEffect } from 'react';
-import {
-  fetchSheetData,
-  fetchParticipants,
-  fetchScoringSp,
-  fetchScoringBld,
-  fetchClimbRecords,
-  fetchData,
-} from '../services/api';
+import { fetchSheetData, fetchData } from '../services/api';
 
 export const useAllData = () => {
   const [data, setData] = useState({

@@ -2,10 +2,13 @@
 import { useAllData } from '../hooks/useData';
 import ClimbingTable from './ClimbingTable';
 import GymBarChart from './GymBarChart';
-import { calculateScores, calculatePompom } from '../utils/calculateScores';
+import { calculateScores } from '../utils/calculateScores';
+import { calculatePompom } from '../utils/calculatePompom';
+import { calculatePompomTeam } from '../utils/calculatePompomTeam';
+import TeamPompomBubbleChart from './TeamPompomBubbleChart';
 
 const DataCharts = () => {
-  const { data, error } = useAllData();
+  const { data, loading, error } = useAllData();
 
   console.log('data', data);
 
@@ -15,52 +18,89 @@ const DataCharts = () => {
   let pompom = calculatePompom(scores);
   console.log('pompom', pompom);
 
+  let pompomTeam = calculatePompomTeam(pompom);
+  console.log('pompomTeam', pompomTeam);
+
   // let teamPompom = pompom.
 
+  if (loading) return <div>Loading...</div>;
   if (error) return <div>Error: {error}</div>;
 
   return (
-    <div className="flex justify-center w-full mt-10 mb-10">
-      <div
-        style={{
-          minWidth: '350px',
-          width: '90%',
-          maxWidth: '1600px',
-          backgroundColor: 'rgba(255, 255, 255, 0.2)',
-          borderRadius: '10px',
-        }}
-        className="flex flex-col p-5"
-      >
-        <div className="text-white text-center mb-4">
-          <span className="title">資料日期：2025/02/17</span>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 [1400px]:grid-cols-3 gap-4">
-          {[2, 3, 4, 5, 6, 7].map((item) => (
-            <div
-              key={item}
-              style={{
-                minHeight: '300px',
-                backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                borderRadius: '8px',
-              }}
-              // className="p-4"
-            >
-              圖表 {item}
+    <div className="w-full space-y-8">
+      <div className="flex justify-center w-full mt-10 mb-10">
+        <div
+          style={{
+            minWidth: '350px',
+            width: '90%',
+            maxWidth: '1600px',
+            backgroundColor: 'rgba(255, 255, 255, 0.2)',
+            borderRadius: '10px',
+          }}
+          className="flex flex-col p-5"
+        >
+          <div className="text-white text-center mb-4">
+            <span className="title">資料日期：2025/02/17</span>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-4">
+              <div
+                style={{
+                  backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                  borderRadius: '8px',
+                }}
+                className="p-4"
+              >
+                <h2 className="text-white text-center text-xl font-bold mb-4">
+                  團隊彩球
+                </h2>
+                <TeamPompomBubbleChart data={pompomTeam} />
+              </div>
+              <div
+                style={{
+                  height: '200px',
+                  backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                  borderRadius: '8px',
+                }}
+              >
+                圖表 2
+              </div>
             </div>
-          ))}
-          <div
-            style={{
-              minHeight: '300px',
-              backgroundColor: 'rgba(0, 0, 0, 0.8)',
-              borderRadius: '8px',
-              position: 'relative',
-            }}
-          >
-            <img
-              src="/belay.link_qr.png"
-              alt="belay link QR"
-              className="absolute inset-0 w-full h-full object-contain p-4"
-            />
+
+            <div className="space-y-4">
+              <div
+                style={{
+                  height: '250px',
+                  backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                  borderRadius: '8px',
+                }}
+              >
+                圖表 3
+              </div>
+              <div
+                style={{
+                  height: '250px',
+                  backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                  borderRadius: '8px',
+                }}
+              >
+                圖表 4
+              </div>
+              <div
+                style={{
+                  height: '100px',
+                  backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                  borderRadius: '8px',
+                  position: 'relative',
+                }}
+              >
+                <img
+                  src="/belay.link_qr.png"
+                  alt="belay link QR"
+                  className="absolute inset-0 w-full h-full object-contain p-4"
+                />
+              </div>
+            </div>
           </div>
         </div>
       </div>

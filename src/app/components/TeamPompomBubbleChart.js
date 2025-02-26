@@ -65,7 +65,7 @@ const TeamPompomBubbleChart = ({ data }) => {
     // 添加圓圈
     node
       .append('circle')
-      .attr('fill-opacity', 0.7) // 改回原本的透明度
+      .attr('fill-opacity', 0.9) // 改回原本的透明度
       .attr('fill', (d) => color(d.data.id))
       .attr('r', (d) => d.r);
 

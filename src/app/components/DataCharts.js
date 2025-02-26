@@ -42,7 +42,7 @@ const DataCharts = () => {
           <div className="text-white text-center mb-4">
             <span className="title">資料日期：2025/02/17</span>
           </div>
-          <div className="grid grid-cols-1 2xl:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 3xl:grid-cols-2 gap-4">
             <div className="space-y-4">
               <div
                 style={{

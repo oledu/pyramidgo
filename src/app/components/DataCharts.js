@@ -6,6 +6,7 @@ import { calculateScores } from '../utils/calculateScores';
 import { calculatePompom } from '../utils/calculatePompom';
 import { calculatePompomTeam } from '../utils/calculatePompomTeam';
 import TeamPompomBubbleChart from './TeamPompomBubbleChart';
+import PompomListChart from './PompomListChart';
 
 const DataCharts = () => {
   const { data, loading, error } = useAllData();
@@ -70,12 +71,16 @@ const DataCharts = () => {
             <div className="space-y-4">
               <div
                 style={{
-                  height: '250px',
+                  minHeight: '200px',
                   backgroundColor: 'rgba(0, 0, 0, 0.8)',
                   borderRadius: '8px',
                 }}
+                className="p-4"
               >
-                圖表 3
+                <h2 className="text-white text-center text-xl font-bold mb-4">
+                  個人彩球
+                </h2>
+                <PompomListChart data={pompom} />
               </div>
               <div
                 style={{

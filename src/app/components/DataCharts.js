@@ -7,6 +7,7 @@ import { calculatePompom } from '../utils/calculatePompom';
 import { calculatePompomTeam } from '../utils/calculatePompomTeam';
 import TeamPompomBubbleChart from './TeamPompomBubbleChart';
 import PompomListChart from './PompomListChart';
+import BeastScoreListChart from './BeastScoreListChart';
 
 const DataCharts = () => {
   const { data, loading, error } = useAllData();
@@ -84,12 +85,16 @@ const DataCharts = () => {
               </div>
               <div
                 style={{
-                  height: '250px',
+                  minHeight: '200px',
                   backgroundColor: 'rgba(0, 0, 0, 0.8)',
                   borderRadius: '8px',
                 }}
+                className="p-4"
               >
-                圖表 4
+                <h2 className="text-white text-center text-xl font-bold mb-4">
+                  野獸模式分數
+                </h2>
+                <BeastScoreListChart data={scores} />
               </div>
               <div
                 style={{

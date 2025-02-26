@@ -72,22 +72,22 @@ const TeamPompomBubbleChart = ({ data }) => {
     // 添加標籤，調整字體大小和位置
     const text = node.append('text').attr('clip-path', (d) => `circle(${d.r})`);
 
-    // 添加團隊名稱
+    // 添加團隊名稱，放在正中間
     text
       .append('tspan')
       .attr('x', 0)
-      .attr('y', (d) => d.r / -3) // 調整垂直位置
+      .attr('y', 0) // 改為 0，放在正中間
       .attr('font-weight', 'bold')
-      .attr('font-size', (d) => Math.min(d.r / 3, 16) + 'px') // 根據圓圈大小調整字體
+      .attr('font-size', (d) => Math.min(d.r / 2.5, 20) + 'px')
       .text((d) => d.data.id);
 
-    // 添加分數
+    // 添加分數，放在下方一點
     text
       .append('tspan')
       .attr('x', 0)
-      .attr('y', (d) => d.r / 4) // 調整垂直位置
+      .attr('y', (d) => d.r / 3) // 改為正值，往下移動
       .attr('fill-opacity', 0.7)
-      .attr('font-size', (d) => Math.min(d.r / 4, 14) + 'px') // 根據圓圈大小調整字體
+      .attr('font-size', (d) => Math.min(d.r / 3, 18) + 'px')
       .text((d) => format(d.value));
   }, [data]);
 

@@ -2,7 +2,7 @@
 import { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
 
-const PompomListChart = ({ data }) => {
+const BeastScoreListChart = ({ data }) => {
   const containerRef = useRef(null);
   const svgRef = useRef(null);
 
@@ -10,10 +10,15 @@ const PompomListChart = ({ data }) => {
   const drawChart = () => {
     if (!data || !data.length) return;
 
-    // 過濾掉 POMPOM_TOTAL 為 0 的資料，並按 POMPOM_SP 降序排序
+    // 過濾出野獸模式的資料，並按總分數降序排序
     const filteredData = data
-      .filter((d) => d.POMPOM_TOTAL > 0)
-      .sort((a, b) => b.POMPOM_TOTAL - a.POMPOM_TOTAL);
+      .filter((d) => d.BEAST_MODE === 'Y')
+      .sort(
+        (a, b) =>
+          (b.TOTAL_SCORE_BLD || 0) +
+          (b.TOTAL_SCORE_SP || 0) -
+          ((a.TOTAL_SCORE_BLD || 0) + (a.TOTAL_SCORE_SP || 0))
+      );
 
     // 獲取容器寬度
     const container = containerRef.current;
@@ -24,8 +29,6 @@ const PompomListChart = ({ data }) => {
     // 設定每個項目的高度和間距
     const itemHeight = 35;
     const height = filteredData.length * itemHeight;
-    const circleRadius = 8;
-    const circleSpacing = 18;
 
     // 清除現有的SVG內容
     d3.select(svgRef.current).selectAll('*').remove();
@@ -57,29 +60,16 @@ const PompomListChart = ({ data }) => {
       .style('font-size', '16px')
       .text((d) => d.CLMBR_NM);
 
-    // 為每一行添加彩球圓圈
-    rows.each(function (d) {
-      const row = d3.select(this);
-      const pompomCount = d.POMPOM_TOTAL;
-
-      // 添加圓圈群組
-      const circles = row
-        .append('g')
-        .attr(
-          'transform',
-          `translate(${width - pompomCount * circleSpacing}, ${itemHeight / 2})`
-        );
-
-      // 添加多個圓圈
-      for (let i = 0; i < pompomCount; i++) {
-        circles
-          .append('circle')
-          .attr('cx', i * circleSpacing)
-          .attr('cy', 0)
-          .attr('r', circleRadius)
-          .attr('fill', '#ff4444');
-      }
-    });
+    // 添加分數文字
+    rows
+      .append('text')
+      .attr('x', width - 10)
+      .attr('y', itemHeight / 2)
+      .attr('dy', '0.35em')
+      .attr('text-anchor', 'end')
+      .attr('fill', '#ffd700')
+      .style('font-size', '16px')
+      .text((d) => d.TOTAL_SCORE_BLD + d.TOTAL_SCORE_SP + ' 分');
 
     // 添加分隔線
     rows
@@ -117,4 +107,4 @@ const PompomListChart = ({ data }) => {
   );
 };
 
-export default PompomListChart;
+export default BeastScoreListChart;

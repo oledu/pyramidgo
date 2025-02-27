@@ -10,15 +10,10 @@ const BeastScoreListChart = ({ data }) => {
   const drawChart = () => {
     if (!data || !data.length) return;
 
-    // 過濾出野獸模式的資料，並按總分數降序排序
+    // 過濾出野獸模式的資料，並按抱石分數降序排序
     const filteredData = data
       .filter((d) => d.BEAST_MODE === 'Y')
-      .sort(
-        (a, b) =>
-          (b.TOTAL_SCORE_BLD || 0) +
-          (b.TOTAL_SCORE_SP || 0) -
-          ((a.TOTAL_SCORE_BLD || 0) + (a.TOTAL_SCORE_SP || 0))
-      );
+      .sort((a, b) => (b.TOTAL_SCORE_BLD || 0) - (a.TOTAL_SCORE_BLD || 0));
 
     // 獲取容器寬度
     const container = containerRef.current;
@@ -69,7 +64,7 @@ const BeastScoreListChart = ({ data }) => {
       .attr('text-anchor', 'end')
       .attr('fill', '#ffd700')
       .style('font-size', '16px')
-      .text((d) => d.TOTAL_SCORE_BLD + d.TOTAL_SCORE_SP + ' 分');
+      .text((d) => d.TOTAL_SCORE_BLD + ' 分');
 
     // 添加分隔線
     rows

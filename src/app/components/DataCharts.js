@@ -8,6 +8,7 @@ import { calculatePompomTeam } from '../utils/calculatePompomTeam';
 import TeamPompomBubbleChart from './TeamPompomBubbleChart';
 import PompomListChart from './PompomListChart';
 import BeastScoreListChart from './BeastScoreListChart';
+import IndividualSpScoreStackBarChart from './IndividualSpScoreStackBarChart';
 
 const DataCharts = () => {
   const { data, loading, error } = useAllData();
@@ -95,6 +96,19 @@ const DataCharts = () => {
                   野獸模式分數
                 </h2>
                 <BeastScoreListChart data={scores} />
+              </div>
+              <div
+                style={{
+                  minHeight: '200px',
+                  backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                  borderRadius: '8px',
+                }}
+                className="p-4"
+              >
+                <h2 className="text-white text-center text-xl font-bold mb-4">
+                  個人運動攀登分數
+                </h2>
+                <IndividualSpScoreStackBarChart data={scores} />
               </div>
               <div
                 style={{

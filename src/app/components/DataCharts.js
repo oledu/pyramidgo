@@ -43,13 +43,14 @@ const DataCharts = () => {
   return (
     <div className="w-full">
       <div className="border-b border-gray-200 bg-black/50">
-        <nav className="-mb-px flex space-x-4 overflow-x-auto">
+        <nav className="-mb-px flex space-x-2 overflow-x-auto justify-start px-2 md:space-x-4 md:justify-center">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`
-                whitespace-nowrap py-4 px-3 border-b-2 font-medium text-sm
+                whitespace-nowrap py-3 px-2 border-b-2 font-medium text-sm
+                md:py-4 md:px-3
                 ${
                   activeTab === tab.id
                     ? 'border-indigo-500 text-white'

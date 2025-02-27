@@ -2,7 +2,7 @@
 import { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
 
-const IndividualSpScoreStackBarChart = ({ data }) => {
+const IndividualBldScoreStackBarChart = ({ data }) => {
   const containerRef = useRef(null);
   const svgRef = useRef(null);
 
@@ -11,11 +11,11 @@ const IndividualSpScoreStackBarChart = ({ data }) => {
 
     // 過濾並重組資料，先按隊伍分組再按分數排序
     const processedData = data
-      .filter((d) => d.TOTAL_SCORE_SP > 0)
+      .filter((d) => d.TOTAL_SCORE_BLD > 0)
       .map((d) => {
-        // 找出所有運動攀登的記錄
-        const spRecords = Object.entries(d.climbRecordCount)
-          .filter(([_, value]) => value.category === 'SP')
+        // 找出所有抱石的記錄
+        const bldRecords = Object.entries(d.climbRecordCount)
+          .filter(([_, value]) => value.category === 'BLD')
           .map(([level, value]) => ({
             grade: level,
             count: value.total,
@@ -27,8 +27,8 @@ const IndividualSpScoreStackBarChart = ({ data }) => {
         return {
           name: d.CLMBR_NM,
           team: d.TEAM_NM || 'Unknown',
-          total: d.TOTAL_SCORE_SP,
-          scores: spRecords,
+          total: d.TOTAL_SCORE_BLD,
+          scores: bldRecords,
         };
       })
       .sort((a, b) => {
@@ -45,21 +45,21 @@ const IndividualSpScoreStackBarChart = ({ data }) => {
       top: 20,
       right: 50,
       bottom: 20,
-      left: 80, // 改回 80px
+      left: 80,
     };
     const width = containerWidth - margin.left - margin.right;
     const barHeight = 30;
-    const teamHeaderHeight = 40; // 隊名標題的高度
+    const teamHeaderHeight = 40;
 
-    // 計算每個隊伍的成員數量和所需高度
+    // 計算總高度
     let currentTeam = null;
     let totalHeight = 0;
     processedData.forEach((d) => {
       if (d.team !== currentTeam) {
-        totalHeight += teamHeaderHeight; // 隊名的高度
+        totalHeight += teamHeaderHeight;
         currentTeam = d.team;
       }
-      totalHeight += barHeight + 5; // 每個成員的高度
+      totalHeight += barHeight + 5;
     });
 
     const height = totalHeight;
@@ -79,21 +79,22 @@ const IndividualSpScoreStackBarChart = ({ data }) => {
     const color = d3
       .scaleOrdinal()
       .domain([
-        '5.7',
-        '5.8',
-        '5.9',
-        '5.10a',
-        '5.10b',
-        '5.10c',
-        '5.10d',
-        '5.11a',
-        '5.11b',
-        '5.11c',
-        '5.11d',
-        '5.12a',
-        '5.12b',
-        '5.12c',
-        '5.12d',
+        'V0',
+        'V1',
+        'V2',
+        'V3',
+        'V4',
+        'V5',
+        'V6',
+        'V7',
+        'V8',
+        'V9',
+        'V10',
+        'V11',
+        'V12',
+        'V13',
+        'V14',
+        'V15',
       ])
       .range([
         '#B71C1C', // 深紅色
@@ -110,6 +111,7 @@ const IndividualSpScoreStackBarChart = ({ data }) => {
         '#00695C',
         '#0277BD',
         '#1565C0',
+        '#1A237E',
         '#0D47A1', // 深藍色
       ]);
 
@@ -118,28 +120,25 @@ const IndividualSpScoreStackBarChart = ({ data }) => {
     currentTeam = null;
 
     processedData.forEach((d) => {
-      // 如果是新的隊伍，添加隊名和分隔線
       if (d.team !== currentTeam) {
-        // 添加分隔線（除了第一個隊伍）
         if (currentTeam !== null) {
           svg
             .append('line')
             .attr('x1', -margin.left)
             .attr('x2', width + margin.right)
-            .attr('y1', yPosition) // 調整位置，與上面的 bar 保持距離
+            .attr('y1', yPosition)
             .attr('y2', yPosition)
-            .attr('stroke', 'rgba(255, 255, 255, 1)') // 降低透明度
+            .attr('stroke', 'rgba(255, 255, 255, 1)')
             .attr('stroke-width', 1);
         }
 
-        // 添加隊名
         svg
           .append('text')
           .attr('class', 'team-label')
-          .attr('x', width / 2) // 置中
+          .attr('x', width / 2)
           .attr('y', yPosition + teamHeaderHeight / 2)
           .attr('dy', '0.35em')
-          .attr('text-anchor', 'middle') // 文字置中
+          .attr('text-anchor', 'middle')
           .attr('fill', 'white')
           .style('font-size', '16px')
           .style('font-weight', 'bold')
@@ -149,11 +148,9 @@ const IndividualSpScoreStackBarChart = ({ data }) => {
         currentTeam = d.team;
       }
 
-      // 繪製分層長條
       let xPosition = 0;
       d.scores.forEach((score) => {
         if (score.count > 0) {
-          // 繪製長條
           const bar = svg
             .append('rect')
             .attr('class', `bar-${score.grade}`)
@@ -163,10 +160,8 @@ const IndividualSpScoreStackBarChart = ({ data }) => {
             .attr('height', barHeight)
             .attr('fill', color(score.grade));
 
-          // 添加 title 元素作為提示
           bar.append('title').text(score.grade);
 
-          // 只在寬度足夠時顯示固定標籤
           if (score.scoreTotal > 30) {
             svg
               .append('text')
@@ -184,7 +179,6 @@ const IndividualSpScoreStackBarChart = ({ data }) => {
         }
       });
 
-      // 添加名稱標籤
       svg
         .append('text')
         .attr('class', 'name-label')
@@ -196,7 +190,6 @@ const IndividualSpScoreStackBarChart = ({ data }) => {
         .style('font-size', '14px')
         .text(d.name);
 
-      // 添加總分標籤
       svg
         .append('text')
         .attr('class', 'score-label')
@@ -233,4 +226,4 @@ const IndividualSpScoreStackBarChart = ({ data }) => {
   );
 };
 
-export default IndividualSpScoreStackBarChart;
+export default IndividualBldScoreStackBarChart;

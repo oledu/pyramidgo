@@ -27,11 +27,11 @@ const DataCharts = ({ data, loading, error }) => {
 
   const tabs = [
     { id: 'overview', name: '總覽' },
-    { id: 'individualSp', name: '運攀' },
     { id: 'individualBld', name: '抱石' },
-    { id: 'beast', name: '獸性' },
-    { id: 'pompom', name: '個人龐龐' },
-    { id: 'teamPompom', name: '團隊龐龐' },
+    { id: 'individualSp', name: '上攀' },
+    { id: 'pompom', name: '個人彩球' },
+    { id: 'teamPompom', name: '團隊彩球' },
+    { id: 'beast', name: '猛獸' },
   ];
 
   if (loading) return <div>Loading...</div>;
@@ -159,7 +159,7 @@ const DataCharts = ({ data, loading, error }) => {
                     </div>
                     <div
                       style={{
-                        height: '100px',
+                        minHeight: '300px',
                         backgroundColor: 'rgba(0, 0, 0, 0.8)',
                         borderRadius: '8px',
                         position: 'relative',
@@ -169,6 +169,9 @@ const DataCharts = ({ data, loading, error }) => {
                         src="/belay.link_qr.png"
                         alt="belay link QR"
                         className="absolute inset-0 w-full h-full object-contain p-4"
+                        style={{
+                          minWidth: '300px',
+                        }}
                       />
                     </div>
                   </div>

@@ -25,7 +25,7 @@ const ClimbingDotChart = ({ data }) => {
 
     const container = containerRef.current;
     const containerWidth = container.clientWidth;
-    const margin = { top: 40, right: 30, bottom: 40, left: 80 };
+    const margin = { top: 20, right: 30, bottom: 40, left: 80 };
     const width = containerWidth - margin.left - margin.right;
     const cellSize = 25;
     const teamHeaderHeight = 40;
@@ -52,18 +52,6 @@ const ClimbingDotChart = ({ data }) => {
       .attr('height', height + margin.top + margin.bottom)
       .append('g')
       .attr('transform', `translate(${margin.left},${margin.top})`);
-
-    // 添加標題
-    svg
-      .append('text')
-      .attr('class', 'chart-title')
-      .attr('x', width / 2)
-      .attr('y', -margin.top / 2)
-      .attr('text-anchor', 'middle')
-      .attr('fill', 'white')
-      .style('font-size', '20px')
-      .style('font-weight', 'bold')
-      .text('每日攀爬次數統計');
 
     // 建立日期範圍
     const dateRange = d3.range(2, 16).map((d) => `3/${d}`);

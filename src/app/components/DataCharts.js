@@ -96,11 +96,14 @@ const DataCharts = ({ data, loading, error }) => {
                     </div>
                     <div
                       style={{
-                        minHeight: '200px',
                         backgroundColor: 'rgba(0, 0, 0, 0.8)',
                         borderRadius: '8px',
                       }}
+                      className="p-2"
                     >
+                      <h2 className="text-white text-center text-xl font-bold mb-4">
+                        每日攀爬次數統計
+                      </h2>
                       <ClimbingDotChart data={scores} />
                     </div>
                   </div>

@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
-import { fetchSheetData, fetchData } from '../services/api';
+import { fetchData } from '../services/api';
 
 export const useAllData = () => {
   const [data, setData] = useState({
-    sheetData: [],
     data: {},
     loading: true,
     error: null,
@@ -12,15 +11,10 @@ export const useAllData = () => {
   useEffect(() => {
     const fetchAll = async () => {
       try {
-        // const [participants, sheet, scoringSp, scoringBld, climbRecords, data] =
-        const [sheet, data] = await Promise.all([
-          fetchSheetData(),
-          fetchData(),
-        ]);
+        const result = await fetchData();
 
         setData({
-          sheetData: sheet,
-          data: data,
+          data: result,
           loading: false,
           error: null,
         });

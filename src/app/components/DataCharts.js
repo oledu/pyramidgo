@@ -33,6 +33,7 @@ const DataCharts = ({ data, loading, error }) => {
     { id: 'pompom', name: '個人彩球' },
     { id: 'teamPompom', name: '團隊彩球' },
     { id: 'beast', name: '猛獸' },
+    { id: 'climbing', name: '攀爬次數' },
   ];
 
   if (loading) return <div>Loading...</div>;
@@ -184,18 +185,79 @@ const DataCharts = ({ data, loading, error }) => {
             </div>
           </div>
         )}
+
         {activeTab === 'individualSp' && (
-          <IndividualSpScoreStackBarChart data={scores} />
+          <div
+            style={{
+              minHeight: '300px',
+              backgroundColor: 'rgba(0, 0, 0, 0.8)',
+              borderRadius: '8px',
+              position: 'relative',
+            }}
+          >
+            <IndividualSpScoreStackBarChart data={scores} />{' '}
+          </div>
         )}
         {activeTab === 'individualBld' && (
-          <IndividualBldScoreStackBarChart data={scores} />
+          <div
+            style={{
+              minHeight: '300px',
+              backgroundColor: 'rgba(0, 0, 0, 0.8)',
+              borderRadius: '8px',
+              position: 'relative',
+            }}
+          >
+            <IndividualBldScoreStackBarChart data={scores} />
+          </div>
         )}
-        {activeTab === 'beast' && <BeastScoreListChart data={scores} />}
-        {activeTab === 'pompom' && <PompomListChart data={pompom} />}
+        {activeTab === 'beast' && (
+          <div
+            style={{
+              minHeight: '300px',
+              backgroundColor: 'rgba(0, 0, 0, 0.8)',
+              borderRadius: '8px',
+              position: 'relative',
+            }}
+          >
+            <BeastScoreListChart data={scores} />
+          </div>
+        )}
+        {activeTab === 'pompom' && (
+          <div
+            style={{
+              minHeight: '300px',
+              backgroundColor: 'rgba(0, 0, 0, 0.8)',
+              borderRadius: '8px',
+              position: 'relative',
+            }}
+          >
+            <PompomListChart data={pompom} />
+          </div>
+        )}
         {activeTab === 'teamPompom' && (
-          <TeamPompomBubbleChart data={pompomTeam} />
+          <div
+            style={{
+              minHeight: '300px',
+              backgroundColor: 'rgba(0, 0, 0, 0.8)',
+              borderRadius: '8px',
+              position: 'relative',
+            }}
+          >
+            <TeamPompomBubbleChart data={pompomTeam} />
+          </div>
         )}
-        {/* <ClimbingDotChart data={data} /> */}
+        {activeTab === 'climbing' && (
+          <div
+            style={{
+              minHeight: '300px',
+              backgroundColor: 'rgba(0, 0, 0, 0.8)',
+              borderRadius: '8px',
+              position: 'relative',
+            }}
+          >
+            <ClimbingDotChart data={scores} />
+          </div>
+        )}
       </div>
     </div>
   );

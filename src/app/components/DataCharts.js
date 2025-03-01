@@ -102,7 +102,7 @@ const DataCharts = ({ data, loading, error }) => {
                       className="p-2"
                     >
                       <h2 className="text-white text-center text-xl font-bold mb-4">
-                        每日攀爬次數統計
+                        每日攀爬次數統計(3/2~3/15)
                       </h2>
                       <ClimbingDotChart data={scores} />
                     </div>

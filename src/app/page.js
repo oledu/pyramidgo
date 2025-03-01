@@ -17,7 +17,7 @@ export default function Home() {
   console.log('data111', data);
 
   return (
-    <main className="flex min-h-screen flex-col items-center p-4">
+    <main className="flex min-h-screen flex-col items-center">
       <Background3D />
       <LogoImg />
       <MarqueeText data={data} />

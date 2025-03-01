@@ -8,6 +8,7 @@ import PompomListChart from './PompomListChart';
 import BeastScoreListChart from './BeastScoreListChart';
 import IndividualSpScoreStackBarChart from './IndividualSpScoreStackBarChart';
 import IndividualBldScoreStackBarChart from './IndividualBldScoreStackBarChart';
+import ClimbingDotChart from './ClimbingDotChart';
 
 const DataCharts = ({ data, loading, error }) => {
   const [activeTab, setActiveTab] = useState('overview');
@@ -74,7 +75,7 @@ const DataCharts = ({ data, loading, error }) => {
                   backgroundColor: 'rgba(255, 255, 255, 0.2)',
                   borderRadius: '10px',
                 }}
-                className="flex flex-col p-5"
+                className="flex flex-col p-1 md:p-5"
               >
                 <div className="text-white text-center mb-4">
                   <span className="title">資料日期：2025/02/17</span>
@@ -95,12 +96,12 @@ const DataCharts = ({ data, loading, error }) => {
                     </div>
                     <div
                       style={{
-                        height: '200px',
+                        minHeight: '200px',
                         backgroundColor: 'rgba(0, 0, 0, 0.8)',
                         borderRadius: '8px',
                       }}
                     >
-                      圖表 2
+                      <ClimbingDotChart data={scores} />
                     </div>
                   </div>
 
@@ -191,6 +192,7 @@ const DataCharts = ({ data, loading, error }) => {
         {activeTab === 'teamPompom' && (
           <TeamPompomBubbleChart data={pompomTeam} />
         )}
+        {/* <ClimbingDotChart data={data} /> */}
       </div>
     </div>
   );

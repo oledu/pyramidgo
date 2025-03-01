@@ -1,7 +1,5 @@
 'use client';
 import { useState } from 'react';
-import { useAllData } from '../hooks/useData';
-import ClimbingTable from './ClimbingTable';
 import { calculateScores } from '../utils/calculateScores';
 import { calculatePompom } from '../utils/calculatePompom';
 import { calculatePompomTeam } from '../utils/calculatePompomTeam';
@@ -11,8 +9,7 @@ import BeastScoreListChart from './BeastScoreListChart';
 import IndividualSpScoreStackBarChart from './IndividualSpScoreStackBarChart';
 import IndividualBldScoreStackBarChart from './IndividualBldScoreStackBarChart';
 
-const DataCharts = () => {
-  const { data, loading, error } = useAllData();
+const DataCharts = ({ data, loading, error }) => {
   const [activeTab, setActiveTab] = useState('overview');
 
   console.log('data', data);
@@ -38,7 +35,8 @@ const DataCharts = () => {
   ];
 
   if (loading) return <div>Loading...</div>;
-  if (error) return <div>Error: {error}</div>;
+  if (error) return <div>Error: {error.message}</div>;
+  if (!data) return <div>No data available</div>;
 
   return (
     <div className="w-full">

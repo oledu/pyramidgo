@@ -149,34 +149,87 @@ const IndividualBldScoreStackBarChart = ({ data }) => {
       }
 
       let xPosition = 0;
-      d.scores.forEach((score) => {
-        if (score.count > 0) {
-          const bar = svg
-            .append('rect')
-            .attr('class', `bar-${score.grade}`)
-            .attr('x', xPosition)
-            .attr('y', yPosition)
-            .attr('width', score.scoreTotal)
-            .attr('height', barHeight)
-            .attr('fill', color(score.grade));
+      d.scores.forEach((score, i) => {
+        const rect = svg
+          .append('rect')
+          .attr('class', 'score-bar')
+          .attr('x', xPosition)
+          .attr('y', yPosition)
+          .attr('width', score.scoreTotal)
+          .attr('height', barHeight)
+          .attr('fill', color(score.grade));
 
-          bar.append('title').text(score.grade);
+        // 創建一個tooltip組，包含背景和文字
+        const tooltipGroup = svg
+          .append('g')
+          .attr('class', 'tooltip-group')
+          .style('opacity', 0);
 
-          if (score.scoreTotal > 30) {
-            svg
-              .append('text')
-              .attr('class', 'count-label')
-              .attr('x', xPosition + score.scoreTotal / 2)
-              .attr('y', yPosition + barHeight / 2)
-              .attr('dy', '0.35em')
-              .attr('text-anchor', 'middle')
-              .attr('fill', 'white')
-              .style('font-size', '12px')
-              .text(score.grade);
-          }
+        // 添加背景矩形
+        const tooltipText = `${score.grade}*${score.count}`;
+        const padding = { x: 8, y: 4 }; // 文字周圍的內邊距
 
-          xPosition += score.scoreTotal;
+        tooltipGroup
+          .append('rect')
+          .attr('class', 'tooltip-bg')
+          .attr('fill', 'rgba(0, 0, 0, 0.8)')
+          .attr('rx', 4) // 圓角
+          .attr('ry', 4);
+
+        // 添加文字
+        const tooltipTextElement = tooltipGroup
+          .append('text')
+          .attr('class', 'tooltip-text')
+          .attr('x', xPosition + score.scoreTotal / 2)
+          .attr('y', yPosition - 10)
+          .attr('text-anchor', 'middle')
+          .attr('fill', 'white')
+          .style('font-size', '12px')
+          .text(tooltipText);
+
+        // 獲取文字的尺寸並設置背景矩形的大小
+        const textBBox = tooltipTextElement.node().getBBox();
+        tooltipGroup
+          .select('.tooltip-bg')
+          .attr('x', textBBox.x - padding.x)
+          .attr('y', textBBox.y - padding.y)
+          .attr('width', textBBox.width + padding.x * 2)
+          .attr('height', textBBox.height + padding.y * 2);
+
+        // 修改事件處理器，操作整個tooltip組
+        rect
+          .on('mouseover', function () {
+            tooltipGroup.style('opacity', 1);
+          })
+          .on('mouseout', function () {
+            tooltipGroup.style('opacity', 0);
+          })
+          .on('touchstart', function (event) {
+            event.preventDefault();
+            svg.selectAll('.tooltip-group').style('opacity', 0);
+            tooltipGroup.style('opacity', 1);
+          })
+          .on('touchend', function () {
+            setTimeout(() => {
+              tooltipGroup.style('opacity', 0);
+            }, 1500);
+          });
+
+        // 對於寬度較大的區塊，仍然保持原有的固定文字
+        if (score.scoreTotal > 30) {
+          svg
+            .append('text')
+            .attr('class', 'count-label')
+            .attr('x', xPosition + score.scoreTotal / 2)
+            .attr('y', yPosition + barHeight / 2)
+            .attr('dy', '0.35em')
+            .attr('text-anchor', 'middle')
+            .attr('fill', 'white')
+            .style('font-size', '12px')
+            .text(score.grade);
         }
+
+        xPosition += score.scoreTotal;
       });
 
       svg

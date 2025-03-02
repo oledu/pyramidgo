@@ -145,7 +145,7 @@ const DataCharts = ({ data, loading, error }) => {
                       className="p-2"
                     >
                       <h2 className="text-white text-center text-xl font-bold mb-4">
-                        個人運動攀登分數
+                        個人上攀分數
                       </h2>
                       <IndividualSpScoreStackBarChart data={scores} />
                     </div>
@@ -158,7 +158,7 @@ const DataCharts = ({ data, loading, error }) => {
                       className="p-2"
                     >
                       <h2 className="text-white text-center text-xl font-bold mb-4">
-                        個人抱石分數
+                        個人抱石紀錄
                       </h2>
                       <IndividualBldScoreStackBarChart data={scores} />
                     </div>

@@ -114,7 +114,58 @@ const ClimbingDotChart = ({ data }) => {
         const totalCount =
           dayRecords.length > 0 ? d3.sum(dayRecords, (r) => +r.SENT_COUNT) : 0;
 
-        svg
+        // 創建一個tooltip組
+        const tooltipGroup = svg
+          .append('g')
+          .attr('class', 'tooltip-group')
+          .style('opacity', 0);
+
+        // 添加背景矩形
+        const tooltipText = `日期: ${date}\n次數: ${totalCount}`;
+        const padding = { x: 8, y: 4 };
+
+        tooltipGroup
+          .append('rect')
+          .attr('class', 'tooltip-bg')
+          .attr('fill', 'rgba(0, 0, 0, 0.8)')
+          .attr('rx', 4)
+          .attr('ry', 4);
+
+        // 添加文字（分兩行）
+        const tooltipTextElement = tooltipGroup
+          .append('text')
+          .attr('class', 'tooltip-text')
+          .attr('x', x(date))
+          .attr('y', yPosition - 20) // 調整位置以適應兩行文字
+          .attr('text-anchor', 'middle')
+          .attr('fill', 'white')
+          .style('font-size', '12px');
+
+        // 添加第一行（日期）
+        tooltipTextElement
+          .append('tspan')
+          .attr('x', x(date))
+          .attr('dy', '0')
+          .text(`日期: ${date}`);
+
+        // 添加第二行（次數）
+        tooltipTextElement
+          .append('tspan')
+          .attr('x', x(date))
+          .attr('dy', '1.2em')
+          .text(`次數: ${totalCount}`);
+
+        // 獲取文字的尺寸並設置背景矩形的大小
+        const textBBox = tooltipTextElement.node().getBBox();
+        tooltipGroup
+          .select('.tooltip-bg')
+          .attr('x', textBBox.x - padding.x)
+          .attr('y', textBBox.y - padding.y)
+          .attr('width', textBBox.width + padding.x * 2)
+          .attr('height', textBBox.height + padding.y * 2);
+
+        // 繪製方格並添加事件
+        const rect = svg
           .append('rect')
           .attr('x', x(date) - cellSize / 2)
           .attr('y', yPosition)
@@ -123,8 +174,22 @@ const ClimbingDotChart = ({ data }) => {
           .attr('fill', colorScale(totalCount))
           .attr('stroke', '#444')
           .attr('stroke-width', 1)
-          .append('title')
-          .text(`${d.name} - ${date}: ${totalCount}次`);
+          .on('mouseover', function () {
+            tooltipGroup.style('opacity', 1);
+          })
+          .on('mouseout', function () {
+            tooltipGroup.style('opacity', 0);
+          })
+          .on('touchstart', function (event) {
+            event.preventDefault();
+            svg.selectAll('.tooltip-group').style('opacity', 0);
+            tooltipGroup.style('opacity', 1);
+          })
+          .on('touchend', function () {
+            setTimeout(() => {
+              tooltipGroup.style('opacity', 0);
+            }, 1500);
+          });
       });
 
       yPosition += cellSize + 5;

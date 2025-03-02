@@ -33,7 +33,7 @@ const DataCharts = ({ data, loading, error }) => {
     { id: 'pompom', name: '個人彩球' },
     { id: 'teamPompom', name: '團隊彩球' },
     { id: 'beast', name: '猛獸' },
-    { id: 'climbing', name: '攀爬次數' },
+    { id: 'climbing', name: '攀爬日記' },
   ];
 
   if (loading) return <div>Loading...</div>;
@@ -103,7 +103,7 @@ const DataCharts = ({ data, loading, error }) => {
                       className="p-2"
                     >
                       <h2 className="text-white text-center text-xl font-bold mb-4">
-                        每日攀爬次數統計(3/2~3/15)
+                        攀爬日記(3/2~3/15)
                       </h2>
                       <ClimbingDotChart data={scores} />
                     </div>
@@ -132,7 +132,7 @@ const DataCharts = ({ data, loading, error }) => {
                       className="p-2"
                     >
                       <h2 className="text-white text-center text-xl font-bold mb-4">
-                        野獸模式分數
+                        猛獸爭霸積分英雄榜
                       </h2>
                       <BeastScoreListChart data={scores} />
                     </div>

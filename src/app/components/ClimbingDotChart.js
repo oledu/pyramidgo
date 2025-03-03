@@ -114,11 +114,26 @@ const ClimbingDotChart = ({ data }) => {
         const totalCount =
           dayRecords.length > 0 ? d3.sum(dayRecords, (r) => +r.SENT_COUNT) : 0;
 
-        // 創建一個tooltip組
-        const tooltipGroup = svg
+        // 先創建一個群組來包含方格和tooltip
+        const cellGroup = svg.append('g').attr('class', 'cell-group');
+
+        // 繪製方格
+        const rect = cellGroup
+          .append('rect')
+          .attr('x', x(date) - cellSize / 2)
+          .attr('y', yPosition)
+          .attr('width', cellSize)
+          .attr('height', cellSize)
+          .attr('fill', colorScale(totalCount))
+          .attr('stroke', '#444')
+          .attr('stroke-width', 1);
+
+        // 創建tooltip組
+        const tooltipGroup = cellGroup
           .append('g')
           .attr('class', 'tooltip-group')
-          .style('opacity', 0);
+          .style('opacity', 0)
+          .style('pointer-events', 'none'); // 防止tooltip干擾事件
 
         // 添加背景矩形
         const tooltipText = `日期: ${date}\n次數: ${totalCount}`;
@@ -136,26 +151,24 @@ const ClimbingDotChart = ({ data }) => {
           .append('text')
           .attr('class', 'tooltip-text')
           .attr('x', x(date))
-          .attr('y', yPosition - 20) // 調整位置以適應兩行文字
+          .attr('y', yPosition - 20)
           .attr('text-anchor', 'middle')
           .attr('fill', 'white')
           .style('font-size', '12px');
 
-        // 添加第一行（日期）
         tooltipTextElement
           .append('tspan')
           .attr('x', x(date))
           .attr('dy', '0')
           .text(`日期: ${date}`);
 
-        // 添加第二行（次數）
         tooltipTextElement
           .append('tspan')
           .attr('x', x(date))
           .attr('dy', '1.2em')
           .text(`次數: ${totalCount}`);
 
-        // 獲取文字的尺寸並設置背景矩形的大小
+        // 設置tooltip背景大小
         const textBBox = tooltipTextElement.node().getBBox();
         tooltipGroup
           .select('.tooltip-bg')
@@ -164,16 +177,8 @@ const ClimbingDotChart = ({ data }) => {
           .attr('width', textBBox.width + padding.x * 2)
           .attr('height', textBBox.height + padding.y * 2);
 
-        // 繪製方格並添加事件
-        const rect = svg
-          .append('rect')
-          .attr('x', x(date) - cellSize / 2)
-          .attr('y', yPosition)
-          .attr('width', cellSize)
-          .attr('height', cellSize)
-          .attr('fill', colorScale(totalCount))
-          .attr('stroke', '#444')
-          .attr('stroke-width', 1)
+        // 添加事件處理
+        rect
           .on('mouseover', function () {
             tooltipGroup.style('opacity', 1);
           })
@@ -182,7 +187,7 @@ const ClimbingDotChart = ({ data }) => {
           })
           .on('touchstart', function (event) {
             event.preventDefault();
-            svg.selectAll('.tooltip-group').style('opacity', 0);
+            d3.selectAll('.tooltip-group').style('opacity', 0);
             tooltipGroup.style('opacity', 1);
           })
           .on('touchend', function () {

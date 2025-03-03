@@ -32,7 +32,7 @@ const DataCharts = ({ data, loading, error }) => {
     { id: 'individualSp', name: '上攀' },
     { id: 'pompom', name: '個人彩球' },
     { id: 'teamPompom', name: '團隊彩球' },
-    { id: 'beast', name: '猛獸' },
+    { id: 'beast', name: '抱石猛獸' },
     { id: 'climbing', name: '攀爬日記' },
   ];
 
@@ -132,7 +132,7 @@ const DataCharts = ({ data, loading, error }) => {
                       className="p-2"
                     >
                       <h2 className="text-white text-center text-xl font-bold mb-4">
-                        猛獸爭霸積分英雄榜
+                        抱石猛獸爭霸積分英雄榜
                       </h2>
                       <BeastScoreListChart data={scores} />
                     </div>

@@ -28,11 +28,11 @@ const DataCharts = ({ data, loading, error }) => {
 
   const tabs = [
     { id: 'overview', name: '總覽' },
+    { id: 'teamPompom', name: '團隊彩球' },
+    { id: 'pompom', name: '個人彩球' },
+    { id: 'beast', name: '抱石猛獸' },
     { id: 'individualBld', name: '抱石' },
     { id: 'individualSp', name: '上攀' },
-    { id: 'pompom', name: '個人彩球' },
-    { id: 'teamPompom', name: '團隊彩球' },
-    { id: 'beast', name: '抱石猛獸' },
     { id: 'climbing', name: '攀爬日記' },
   ];
 
@@ -79,7 +79,9 @@ const DataCharts = ({ data, loading, error }) => {
                 className="flex flex-col p-1 md:p-5"
               >
                 <div className="text-white text-center mb-4">
-                  <span className="title">資料日期：2025/03/02</span>
+                  <span className="title text-2xl font-semibold">
+                    資料日期：2025/03/04
+                  </span>
                 </div>
                 <div className="grid grid-cols-1 3xl:grid-cols-2 gap-4">
                   <div className="space-y-4">
@@ -95,21 +97,6 @@ const DataCharts = ({ data, loading, error }) => {
                       </h2>
                       <TeamPompomBubbleChart data={pompomTeam} />
                     </div>
-                    <div
-                      style={{
-                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                        borderRadius: '8px',
-                      }}
-                      className="p-2"
-                    >
-                      <h2 className="text-white text-center text-xl font-bold mb-4">
-                        攀爬日記(3/2~3/15)
-                      </h2>
-                      <ClimbingDotChart data={scores} />
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
                     <div
                       style={{
                         minHeight: '200px',
@@ -136,6 +123,9 @@ const DataCharts = ({ data, loading, error }) => {
                       </h2>
                       <BeastScoreListChart data={scores} />
                     </div>
+                  </div>
+
+                  <div className="space-y-4">
                     <div
                       style={{
                         minHeight: '200px',
@@ -145,9 +135,9 @@ const DataCharts = ({ data, loading, error }) => {
                       className="p-2"
                     >
                       <h2 className="text-white text-center text-xl font-bold mb-4">
-                        個人上攀分數
+                        個人抱石積分
                       </h2>
-                      <IndividualSpScoreStackBarChart data={scores} />
+                      <IndividualBldScoreStackBarChart data={scores} />
                     </div>
                     <div
                       style={{
@@ -158,9 +148,21 @@ const DataCharts = ({ data, loading, error }) => {
                       className="p-2"
                     >
                       <h2 className="text-white text-center text-xl font-bold mb-4">
-                        個人抱石紀錄
+                        個人上攀積分
                       </h2>
-                      <IndividualBldScoreStackBarChart data={scores} />
+                      <IndividualSpScoreStackBarChart data={scores} />
+                    </div>
+                    <div
+                      style={{
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        borderRadius: '8px',
+                      }}
+                      className="p-2"
+                    >
+                      <h2 className="text-white text-center text-xl font-bold mb-4">
+                        攀爬日記(3/2~3/15)
+                      </h2>
+                      <ClimbingDotChart data={scores} />
                     </div>
                     <div
                       style={{

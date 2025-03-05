@@ -27,6 +27,7 @@ const IndividualSpScoreStackBarChart = ({ data }) => {
         return {
           name: d.CLMBR_NM,
           team: d.TEAM_NM || 'Unknown',
+          level: d.REG_SP_LEVEL || '', // 添加上攀等級
           total: d.TOTAL_SCORE_SP,
           scores: spRecords,
         };
@@ -235,16 +236,28 @@ const IndividualSpScoreStackBarChart = ({ data }) => {
       });
 
       // 添加名稱標籤
-      svg
+      const nameLabel = svg
         .append('text')
         .attr('class', 'name-label')
         .attr('x', -5)
         .attr('y', yPosition + barHeight / 2)
-        .attr('dy', '0.35em')
         .attr('text-anchor', 'end')
         .attr('fill', 'white')
-        .style('font-size', '14px')
+        .style('font-size', '14px');
+
+      // 添加名字
+      nameLabel
+        .append('tspan')
+        .attr('x', -5)
+        .attr('dy', '-0.5em') // 向上移動半行
         .text(d.name);
+
+      // 添加等級
+      nameLabel
+        .append('tspan')
+        .attr('x', -5)
+        .attr('dy', '1.2em') // 向下移動一行多一點
+        .text(d.level);
 
       // 添加總分標籤
       svg

@@ -27,6 +27,7 @@ const IndividualBldScoreStackBarChart = ({ data }) => {
         return {
           name: d.CLMBR_NM,
           team: d.TEAM_NM || 'Unknown',
+          level: d.REG_BLD_LEVEL || '',
           total: d.TOTAL_SCORE_BLD,
           scores: bldRecords,
         };
@@ -241,7 +242,7 @@ const IndividualBldScoreStackBarChart = ({ data }) => {
         .attr('text-anchor', 'end')
         .attr('fill', 'white')
         .style('font-size', '14px')
-        .text(d.name);
+        .text(`${d.name} (${d.level})`);
 
       svg
         .append('text')

@@ -71,7 +71,7 @@ const DataCharts = ({ data, loading, error }) => {
               <div
                 style={{
                   minWidth: '350px',
-                  width: '90%',
+                  width: '95%',
                   maxWidth: '1600px',
                   backgroundColor: 'rgba(255, 255, 255, 0.2)',
                   borderRadius: '10px',

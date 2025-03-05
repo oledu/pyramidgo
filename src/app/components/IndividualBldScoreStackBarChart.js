@@ -242,7 +242,7 @@ const IndividualBldScoreStackBarChart = ({ data }) => {
         .attr('text-anchor', 'end')
         .attr('fill', 'white')
         .style('font-size', '14px')
-        .text(`${d.name} (${d.level})`);
+        .text(`${d.name} ${d.level}`);
 
       svg
         .append('text')

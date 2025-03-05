@@ -78,11 +78,6 @@ const DataCharts = ({ data, loading, error }) => {
                 }}
                 className="flex flex-col p-1 md:p-5"
               >
-                <div className="text-white text-center mb-4">
-                  <span className="title text-2xl font-semibold">
-                    資料日期：2025/03/04
-                  </span>
-                </div>
                 <div className="grid grid-cols-1 3xl:grid-cols-2 gap-4">
                   <div className="space-y-4">
                     <div

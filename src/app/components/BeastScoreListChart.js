@@ -64,7 +64,7 @@ const BeastScoreListChart = ({ data }) => {
       .attr('text-anchor', 'end')
       .attr('fill', '#ffd700')
       .style('font-size', '16px')
-      .text((d) => (d.TOTAL_SCORE_BLD % 1 === 0 ? d.TOTAL_SCORE_BLD : d.TOTAL_SCORE_BLD.toFixed(1)) + ' 分');
+      .text((d) => (d.TOTAL_SCORE_BLD % 1 === 0 ? d.TOTAL_SCORE_BLD : d.TOTAL_SCORE_BLD.toFixed(1)) + ' 分 ');
 
     // 添加分隔線
     rows

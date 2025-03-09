@@ -65,11 +65,12 @@ export function calculateScores(data) {
 
     // 更新統計數據
     climber.climbRecordCount[SENT_LEVEL].total += sentCount;
-    if (SP_LEADING === 'Y') {
-      climber.climbRecordCount[SENT_LEVEL].leading += sentCount;
+    if (SP_LEADING) {
+      climber.climbRecordCount[SENT_LEVEL].leading +=
+        parseInt(SP_LEADING, 10) || 0;
     }
-    if (SP_RP === 'Y') {
-      climber.climbRecordCount[SENT_LEVEL].rp += sentCount;
+    if (SP_RP) {
+      climber.climbRecordCount[SENT_LEVEL].rp += parseInt(SP_RP, 10) || 0;
     }
 
     // **嘗試匹配分數**

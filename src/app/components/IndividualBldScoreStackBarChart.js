@@ -41,14 +41,13 @@ const IndividualBldScoreStackBarChart = ({ data }) => {
 
     // 找出最大總分來計算所需寬度
     const maxTotalScore = Math.max(...processedData.map((d) => d.total));
-    const scoreTextWidth = 40; // 為分數文字預留的寬度
+    const scoreTextWidth = 40;
 
-    // 設定圖表尺寸
     const container = containerRef.current;
     const containerWidth = container.clientWidth;
     const margin = {
       top: 20,
-      right: scoreTextWidth, // 修改右邊距為分數文字寬度
+      right: scoreTextWidth,
       bottom: 20,
       left: 80,
     };
@@ -97,33 +96,27 @@ const IndividualBldScoreStackBarChart = ({ data }) => {
         'V10',
         'V11',
         'V12',
-        'V13',
-        'V14',
-        'V15',
       ])
       .range([
         '#B71C1C', // 深紅色
-        '#C62828',
-        '#D32F2F',
-        '#E64A19',
-        '#F4511E',
-        '#FB8C00',
-        '#FFB300',
-        '#9E9D24',
-        '#7CB342',
-        '#558B2F',
-        '#2E7D32',
-        '#00695C',
-        '#0277BD',
-        '#1565C0',
-        '#1A237E',
-        '#0D47A1', // 深藍色
+        '#E53935', // 鮮紅色 (增加亮度)
+        '#F4511E', // 橘紅色
+        '#FF9800', // 亮橘色
+        '#FFC107', // 黃色
+        '#AFB42B', // 黃綠色 (降低飽和度)
+        '#388E3C', // 深綠色
+        '#009688', // 青色
+        '#1976D2', // 深藍色
+        '#0288D1', // 亮藍色
+        '#7B1FA2', // 紫色
+        '#6A1B9A', // 深紫色
+        '#4E342E', // 棕色
       ]);
 
-    // 創建比例尺來確保最長的bar能剛好到達右邊界
+    // 創建比例尺，使用平方根值
     const xScale = d3
       .scaleLinear()
-      .domain([0, maxTotalScore])
+      .domain([0, Math.sqrt(maxTotalScore)]) // 使用平方根作為domain
       .range([0, width]);
 
     // 繪製圖表
@@ -159,9 +152,21 @@ const IndividualBldScoreStackBarChart = ({ data }) => {
         currentTeam = d.team;
       }
 
+      // 計算這個人的總寬度
+      const totalWidth = xScale(Math.sqrt(d.total));
+
+      // 計算每個分數段的平方根比例
+      const totalSqrt = d.scores.reduce(
+        (sum, score) => sum + Math.sqrt(score.scoreTotal),
+        0
+      );
+
       let xPosition = 0;
       d.scores.forEach((score, i) => {
-        const scaledWidth = xScale(score.scoreTotal);
+        // 使用平方根比例計算寬度
+        const scaledWidth =
+          totalWidth * (Math.sqrt(score.scoreTotal) / totalSqrt);
+
         const rect = svg
           .append('rect')
           .attr('class', 'score-bar')
@@ -171,64 +176,9 @@ const IndividualBldScoreStackBarChart = ({ data }) => {
           .attr('height', barHeight)
           .attr('fill', color(score.grade));
 
-        // 創建一個tooltip組，包含背景和文字
-        const tooltipGroup = svg
-          .append('g')
-          .attr('class', 'tooltip-group')
-          .style('opacity', 0);
-
-        // 添加背景矩形
-        const tooltipText = `${score.grade}*${score.count}`;
-        const padding = { x: 8, y: 4 }; // 文字周圍的內邊距
-
-        tooltipGroup
-          .append('rect')
-          .attr('class', 'tooltip-bg')
-          .attr('fill', 'rgba(0, 0, 0, 0.8)')
-          .attr('rx', 4) // 圓角
-          .attr('ry', 4);
-
-        // 添加文字
-        const tooltipTextElement = tooltipGroup
-          .append('text')
-          .attr('class', 'tooltip-text')
-          .attr('x', xPosition + scaledWidth / 2)
-          .attr('y', yPosition - 10)
-          .attr('text-anchor', 'middle')
-          .attr('fill', 'white')
-          .style('font-size', '12px')
-          .text(tooltipText);
-
-        // 獲取文字的尺寸並設置背景矩形的大小
-        const textBBox = tooltipTextElement.node().getBBox();
-        tooltipGroup
-          .select('.tooltip-bg')
-          .attr('x', textBBox.x - padding.x)
-          .attr('y', textBBox.y - padding.y)
-          .attr('width', textBBox.width + padding.x * 2)
-          .attr('height', textBBox.height + padding.y * 2);
-
-        // 修改事件處理器，操作整個tooltip組
-        rect
-          .on('mouseover', function () {
-            tooltipGroup.style('opacity', 1);
-          })
-          .on('mouseout', function () {
-            tooltipGroup.style('opacity', 0);
-          })
-          .on('touchstart', function (event) {
-            event.preventDefault();
-            svg.selectAll('.tooltip-group').style('opacity', 0);
-            tooltipGroup.style('opacity', 1);
-          })
-          .on('touchend', function () {
-            setTimeout(() => {
-              tooltipGroup.style('opacity', 0);
-            }, 1500);
-          });
-
-        // 對於寬度較大的區塊，仍然保持原有的固定文字
-        if (score.scoreTotal > 30) {
+        // 進一步降低顯示閾值，讓更多文字顯示
+        if (scaledWidth > 8) {
+          // 降低到8px
           svg
             .append('text')
             .attr('class', 'count-label')
@@ -237,7 +187,7 @@ const IndividualBldScoreStackBarChart = ({ data }) => {
             .attr('dy', '0.35em')
             .attr('text-anchor', 'middle')
             .attr('fill', 'white')
-            .style('font-size', '12px')
+            .style('font-size', '11px') // 稍微縮小字體
             .text(score.grade);
         }
 

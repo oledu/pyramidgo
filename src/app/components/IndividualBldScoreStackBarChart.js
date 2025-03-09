@@ -39,12 +39,16 @@ const IndividualBldScoreStackBarChart = ({ data }) => {
         return a.team.localeCompare(b.team);
       });
 
+    // 找出最大總分來計算所需寬度
+    const maxTotalScore = Math.max(...processedData.map((d) => d.total));
+    const scoreTextWidth = 40; // 為分數文字預留的寬度
+
     // 設定圖表尺寸
     const container = containerRef.current;
     const containerWidth = container.clientWidth;
     const margin = {
       top: 20,
-      right: 50,
+      right: scoreTextWidth, // 修改右邊距為分數文字寬度
       bottom: 20,
       left: 80,
     };
@@ -116,6 +120,12 @@ const IndividualBldScoreStackBarChart = ({ data }) => {
         '#0D47A1', // 深藍色
       ]);
 
+    // 創建比例尺來確保最長的bar能剛好到達右邊界
+    const xScale = d3
+      .scaleLinear()
+      .domain([0, maxTotalScore])
+      .range([0, width]);
+
     // 繪製圖表
     let yPosition = 0;
     currentTeam = null;
@@ -151,12 +161,13 @@ const IndividualBldScoreStackBarChart = ({ data }) => {
 
       let xPosition = 0;
       d.scores.forEach((score, i) => {
+        const scaledWidth = xScale(score.scoreTotal);
         const rect = svg
           .append('rect')
           .attr('class', 'score-bar')
           .attr('x', xPosition)
           .attr('y', yPosition)
-          .attr('width', score.scoreTotal)
+          .attr('width', scaledWidth)
           .attr('height', barHeight)
           .attr('fill', color(score.grade));
 
@@ -181,7 +192,7 @@ const IndividualBldScoreStackBarChart = ({ data }) => {
         const tooltipTextElement = tooltipGroup
           .append('text')
           .attr('class', 'tooltip-text')
-          .attr('x', xPosition + score.scoreTotal / 2)
+          .attr('x', xPosition + scaledWidth / 2)
           .attr('y', yPosition - 10)
           .attr('text-anchor', 'middle')
           .attr('fill', 'white')
@@ -221,7 +232,7 @@ const IndividualBldScoreStackBarChart = ({ data }) => {
           svg
             .append('text')
             .attr('class', 'count-label')
-            .attr('x', xPosition + score.scoreTotal / 2)
+            .attr('x', xPosition + scaledWidth / 2)
             .attr('y', yPosition + barHeight / 2)
             .attr('dy', '0.35em')
             .attr('text-anchor', 'middle')
@@ -230,10 +241,10 @@ const IndividualBldScoreStackBarChart = ({ data }) => {
             .text(score.grade);
         }
 
-        xPosition += score.scoreTotal;
+        xPosition += scaledWidth;
       });
 
-      // 添加名稱標籤
+      // 修改名稱標籤部分
       const nameLabel = svg
         .append('text')
         .attr('class', 'name-label')
@@ -243,24 +254,48 @@ const IndividualBldScoreStackBarChart = ({ data }) => {
         .attr('fill', 'white')
         .style('font-size', '14px');
 
-      // 添加名字
+      // 添加名字格式化函數
+      const formatName = (name) => {
+        // 檢查是否包含中文字符的函數
+        const isChinese = (str) => /[\u4E00-\u9FFF]/.test(str);
+
+        // 檢查每個字符並計算長度
+        let visualLength = 0;
+        let cutIndex = 0;
+
+        for (let i = 0; i < name.length; i++) {
+          if (isChinese(name[i])) {
+            visualLength += 2; // 中文字符計為2個長度
+          } else {
+            visualLength += 1; // 英文和其他字符計為1個長度
+          }
+
+          if (visualLength <= 6) {
+            // 允許3個中文字或6個英文字
+            cutIndex = i + 1;
+          } else {
+            break;
+          }
+        }
+
+        return name.length > cutIndex
+          ? name.substring(0, cutIndex) + '...'
+          : name;
+      };
+
       nameLabel
         .append('tspan')
         .attr('x', -5)
-        .attr('dy', '-0.5em') // 向上移動半行
-        .text(d.name);
+        .attr('dy', '-0.5em')
+        .text(formatName(d.name));
 
       // 添加等級
-      nameLabel
-        .append('tspan')
-        .attr('x', -5)
-        .attr('dy', '1.2em') // 向下移動一行多一點
-        .text(d.level);
+      nameLabel.append('tspan').attr('x', -5).attr('dy', '1.2em').text(d.level);
 
       svg
         .append('text')
         .attr('class', 'score-label')
-        .attr('x', xPosition + 5)
+        .attr('x', width + 5) // 位置調整到最右邊
         .attr('y', yPosition + barHeight / 2)
         .attr('dy', '0.35em')
         .attr('fill', 'white')

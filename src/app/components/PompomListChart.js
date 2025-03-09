@@ -38,6 +38,35 @@ const PompomListChart = ({ data }) => {
       .append('g')
       .attr('transform', `translate(${margin.left},${margin.top})`);
 
+    // 添加漸層定義
+    const defs = svg.append('defs');
+
+    // 創建球體漸層
+    const gradient = defs
+      .append('radialGradient')
+      .attr('id', 'ballGradient')
+      .attr('cx', '35%')
+      .attr('cy', '35%')
+      .attr('r', '60%');
+
+    gradient
+      .append('stop')
+      .attr('offset', '0%')
+      .attr('stop-color', '#ff7777') // 亮色
+      .attr('stop-opacity', 1);
+
+    gradient
+      .append('stop')
+      .attr('offset', '50%')
+      .attr('stop-color', '#ff4444') // 中間色
+      .attr('stop-opacity', 1);
+
+    gradient
+      .append('stop')
+      .attr('offset', '100%')
+      .attr('stop-color', '#cc0000') // 暗色
+      .attr('stop-opacity', 1);
+
     // 建立每一行
     const rows = svg
       .selectAll('.row')
@@ -70,14 +99,14 @@ const PompomListChart = ({ data }) => {
           `translate(${width - pompomCount * circleSpacing}, ${itemHeight / 2})`
         );
 
-      // 添加多個圓圈
+      // 添加多個球體
       for (let i = 0; i < pompomCount; i++) {
         circles
           .append('circle')
           .attr('cx', i * circleSpacing)
           .attr('cy', 0)
           .attr('r', circleRadius)
-          .attr('fill', '#ff4444');
+          .attr('fill', 'url(#ballGradient)'); // 使用漸層
       }
     });
 

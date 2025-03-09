@@ -70,14 +70,13 @@ const IndividualSpScoreStackBarChart = ({ data }) => {
 
     // 找出最大總分來計算所需寬度
     const maxTotalScore = Math.max(...processedData.map((d) => d.total));
-    const scoreTextWidth = 40; // 為分數文字預留的寬度
+    const scoreTextWidth = 40;
 
-    // 設定圖表尺寸
     const container = containerRef.current;
     const containerWidth = container.clientWidth;
     const margin = {
       top: 20,
-      right: scoreTextWidth, // 修改右邊距為分數文字寬度
+      right: scoreTextWidth,
       bottom: 20,
       left: 80,
     };
@@ -147,10 +146,10 @@ const IndividualSpScoreStackBarChart = ({ data }) => {
         '#0D47A1', // 深藍色
       ]);
 
-    // 創建比例尺來確保最長的bar能剛好到達右邊界
+    // 創建比例尺
     const xScale = d3
       .scaleLinear()
-      .domain([0, maxTotalScore])
+      .domain([0, Math.sqrt(maxTotalScore)])
       .range([0, width]);
 
     // 繪製圖表
@@ -189,10 +188,20 @@ const IndividualSpScoreStackBarChart = ({ data }) => {
         currentTeam = d.team;
       }
 
-      // 繪製分層長條
+      // 計算這個人的總寬度（用於確保對齊）
+      const totalWidth = xScale(Math.sqrt(d.total));
+
+      // 計算每個分數段的比例
+      const proportions = d.scores.map((score) => ({
+        ...score,
+        proportion: score.scoreTotal / d.total,
+      }));
+
       let xPosition = 0;
       d.scores.forEach((score, i) => {
-        const scaledWidth = xScale(score.scoreTotal);
+        // 使用總寬度和比例來計算每個段的寬度
+        const scaledWidth = totalWidth * (score.scoreTotal / d.total);
+
         const rect = svg
           .append('rect')
           .attr('class', 'score-bar')
@@ -258,19 +267,18 @@ const IndividualSpScoreStackBarChart = ({ data }) => {
             }, 1500);
           });
 
-        // 對於寬度較大的區塊，仍然保持原有的固定文字
-        if (score.scoreTotal > 30) {
-          svg
-            .append('text')
-            .attr('class', 'count-label')
-            .attr('x', xPosition + scaledWidth / 2)
-            .attr('y', yPosition + barHeight / 2)
-            .attr('dy', '0.35em')
-            .attr('text-anchor', 'middle')
-            .attr('fill', 'white')
-            .style('font-size', '12px')
-            .text(score.grade);
-        }
+        // 修改文字顯示條件
+        // 對於所有區塊都顯示文字，不再檢查寬度
+        svg
+          .append('text')
+          .attr('class', 'count-label')
+          .attr('x', xPosition + scaledWidth / 2)
+          .attr('y', yPosition + barHeight / 2)
+          .attr('dy', '0.35em')
+          .attr('text-anchor', 'middle')
+          .attr('fill', 'white')
+          .style('font-size', '12px')
+          .text(score.grade);
 
         xPosition += scaledWidth;
       });

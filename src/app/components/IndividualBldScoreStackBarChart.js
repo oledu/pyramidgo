@@ -163,11 +163,14 @@ const IndividualBldScoreStackBarChart = ({ data }) => {
 
       let xPosition = 0;
       d.scores.forEach((score, i) => {
-        // 使用平方根比例計算寬度
         const scaledWidth =
           totalWidth * (Math.sqrt(score.scoreTotal) / totalSqrt);
 
-        const rect = svg
+        // 創建一個群組來包含矩形和互動區域
+        const group = svg.append('g').attr('class', 'bar-group');
+
+        // 添加可見的矩形
+        const rect = group
           .append('rect')
           .attr('class', 'score-bar')
           .attr('x', xPosition)
@@ -176,10 +179,89 @@ const IndividualBldScoreStackBarChart = ({ data }) => {
           .attr('height', barHeight)
           .attr('fill', color(score.grade));
 
-        // 進一步降低顯示閾值，讓更多文字顯示
+        // 添加透明的互動區域
+        group
+          .append('rect')
+          .attr('x', xPosition)
+          .attr('y', yPosition)
+          .attr('width', scaledWidth)
+          .attr('height', barHeight)
+          .attr('fill', 'transparent')
+          .attr('class', 'score-bar-overlay')
+          .on('mouseover', function (event) {
+            if (window.innerWidth > 768) {
+              // 只在桌面版顯示懸停效果
+              showTooltip(event);
+            }
+          })
+          .on('mouseout', function () {
+            if (window.innerWidth > 768) {
+              hideTooltip();
+            }
+          })
+          .on('touchstart', function (event) {
+            event.preventDefault(); // 防止觸發其他事件
+            showTooltip(event);
+          })
+          .on('touchend', function () {
+            setTimeout(hideTooltip, 2000); // 2秒後自動隱藏
+          });
+
+        // 抽取 tooltip 顯示邏輯
+        const showTooltip = (event) => {
+          d3.select(event.target.parentNode)
+            .select('.score-bar')
+            .style('opacity', 0.8);
+
+          const tooltip = d3.select('#tooltip');
+          const isMobile = window.innerWidth <= 768;
+          const tooltipWidth = isMobile ? 200 : 180; // 加寬桌面版以適應更多內容
+          const tooltipHeight = isMobile ? 120 : 120; // 統一高度
+
+          let left, top;
+
+          if (isMobile) {
+            left = (window.innerWidth - tooltipWidth) / 2;
+            top = window.innerHeight * 0.4 - tooltipHeight / 2;
+          } else {
+            left = event.clientX + 10;
+            top = event.clientY - 10;
+
+            if (left + tooltipWidth > window.innerWidth) {
+              left = event.clientX - tooltipWidth - 10;
+            }
+            if (top + tooltipHeight > window.innerHeight) {
+              top = event.clientY - tooltipHeight - 10;
+            }
+          }
+
+          // 統一桌面版和手機版的內容
+          tooltip
+            .style('opacity', 1)
+            .style('display', 'block')
+            .style('left', `${left}px`)
+            .style('top', `${top}px`).html(`
+              <div class="text-base md:text-sm p-1">
+                <div class="text-center mb-2 border-b border-gray-600 pb-2">
+                  <div class="font-bold">${d.name}</div>
+                  <div class="text-sm text-gray-300">參賽組別：${d.level}</div>
+                </div>
+                <div class="mb-1">路線等級: <span class="font-bold">${score.grade}</span></div>
+                <div class="mb-1">完成次數: <span class="font-bold">${score.count}</span></div>
+                <div>得分: <span class="font-bold">${score.scoreTotal}</span></div>
+              </div>
+            `);
+        };
+
+        const hideTooltip = () => {
+          d3.selectAll('.score-bar').style('opacity', 1);
+
+          d3.select('#tooltip').style('opacity', 0).style('display', 'none');
+        };
+
+        // 添加文字標籤
         if (scaledWidth > 8) {
-          // 降低到8px
-          svg
+          group
             .append('text')
             .attr('class', 'count-label')
             .attr('x', xPosition + scaledWidth / 2)
@@ -187,7 +269,7 @@ const IndividualBldScoreStackBarChart = ({ data }) => {
             .attr('dy', '0.35em')
             .attr('text-anchor', 'middle')
             .attr('fill', 'white')
-            .style('font-size', '11px') // 稍微縮小字體
+            .style('font-size', '11px')
             .text(score.grade);
         }
 
@@ -272,8 +354,18 @@ const IndividualBldScoreStackBarChart = ({ data }) => {
   }, [data]);
 
   return (
-    <div ref={containerRef} className="w-full h-full">
+    <div ref={containerRef} className="w-full h-full relative">
       <svg ref={svgRef} className="w-full h-full"></svg>
+      <div
+        id="tooltip"
+        className="fixed hidden bg-gray-800 text-white rounded-lg shadow-lg transition-opacity duration-200
+                   p-3" // 統一內邊距
+        style={{
+          pointerEvents: 'none',
+          zIndex: 1000,
+          minWidth: window.innerWidth <= 768 ? '250px' : '180px', // 設置桌面版最小寬度
+        }}
+      />
     </div>
   );
 };

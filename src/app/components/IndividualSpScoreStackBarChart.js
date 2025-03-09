@@ -188,21 +188,24 @@ const IndividualSpScoreStackBarChart = ({ data }) => {
         currentTeam = d.team;
       }
 
-      // 計算這個人的總寬度（用於確保對齊）
+      // 計算這個人的總寬度
       const totalWidth = xScale(Math.sqrt(d.total));
 
-      // 計算每個分數段的比例
-      const proportions = d.scores.map((score) => ({
-        ...score,
-        proportion: score.scoreTotal / d.total,
-      }));
+      // 計算每個分數段的平方根比例
+      const totalSqrt = d.scores.reduce(
+        (sum, score) => sum + Math.sqrt(score.scoreTotal),
+        0
+      );
 
       let xPosition = 0;
       d.scores.forEach((score, i) => {
-        // 使用總寬度和比例來計算每個段的寬度
-        const scaledWidth = totalWidth * (score.scoreTotal / d.total);
+        const scaledWidth =
+          totalWidth * (Math.sqrt(score.scoreTotal) / totalSqrt);
 
-        const rect = svg
+        // 創建一個群組來包含矩形和互動區域
+        const group = svg.append('g').attr('class', 'bar-group');
+
+        const rect = group
           .append('rect')
           .attr('class', 'score-bar')
           .attr('x', xPosition)
@@ -211,74 +214,99 @@ const IndividualSpScoreStackBarChart = ({ data }) => {
           .attr('height', barHeight)
           .attr('fill', color(score.grade));
 
-        // 創建一個tooltip組，包含背景和文字
-        const tooltipGroup = svg
-          .append('g')
-          .attr('class', 'tooltip-group')
-          .style('opacity', 0);
+        // 添加等級文字
+        if (scaledWidth > 8) {
+          // 當寬度足夠時顯示文字
+          group
+            .append('text')
+            .attr('class', 'count-label')
+            .attr('x', xPosition + scaledWidth / 2)
+            .attr('y', yPosition + barHeight / 2)
+            .attr('dy', '0.35em')
+            .attr('text-anchor', 'middle')
+            .attr('fill', 'white')
+            .style('font-size', '11px')
+            .text(score.grade);
+        }
 
-        // 添加背景矩形
-        const tooltipText = `${score.grade}*${score.count}`;
-        const padding = { x: 8, y: 4 }; // 文字周圍的內邊距
+        // 為這個特定的長條創建 showTooltip 函數
+        const showTooltipForBar = (event) => {
+          const currentBar = d3
+            .select(event.target.parentNode)
+            .select('.score-bar')
+            .style('opacity', 0.8);
 
-        tooltipGroup
+          const tooltip = d3.select('#tooltip');
+          const isMobile = window.innerWidth <= 768;
+          const tooltipWidth = isMobile ? 200 : 180;
+          const tooltipHeight = isMobile ? 120 : 120;
+
+          let left, top;
+
+          if (isMobile) {
+            left = (window.innerWidth - tooltipWidth) / 2;
+            top = window.innerHeight * 0.4 - tooltipHeight / 2;
+          } else {
+            left = event.clientX + 10;
+            top = event.clientY - 10;
+
+            if (left + tooltipWidth > window.innerWidth) {
+              left = event.clientX - tooltipWidth - 10;
+            }
+            if (top + tooltipHeight > window.innerHeight) {
+              top = event.clientY - tooltipHeight - 10;
+            }
+          }
+
+          tooltip
+            .style('opacity', 1)
+            .style('display', 'block')
+            .style('left', `${left}px`)
+            .style('top', `${top}px`).html(`
+              <div class="text-base md:text-sm p-1">
+                <div class="text-center mb-2 border-b border-gray-600 pb-2">
+                  <div class="font-bold">${d.name}</div>
+                  <div class="text-sm text-gray-300">參賽組別：${d.level}</div>
+                </div>
+                <div class="mb-1">路線等級: <span class="font-bold">${score.grade}</span></div>
+                <div class="mb-1">完成次數: <span class="font-bold">${score.count}</span></div>
+                <div>得分: <span class="font-bold">${score.scoreTotal}</span></div>
+              </div>
+            `);
+        };
+
+        const hideTooltip = () => {
+          d3.selectAll('.score-bar').style('opacity', 1);
+
+          d3.select('#tooltip').style('display', 'none');
+        };
+
+        // 添加互動區域
+        group
           .append('rect')
-          .attr('class', 'tooltip-bg')
-          .attr('fill', 'rgba(0, 0, 0, 0.8)')
-          .attr('rx', 4)
-          .attr('ry', 4);
-
-        // 添加文字
-        const tooltipTextElement = tooltipGroup
-          .append('text')
-          .attr('class', 'tooltip-text')
-          .attr('x', xPosition + scaledWidth / 2)
-          .attr('y', yPosition - 10)
-          .attr('text-anchor', 'middle')
-          .attr('fill', 'white')
-          .style('font-size', '12px')
-          .text(tooltipText);
-
-        // 獲取文字的尺寸並設置背景矩形的大小
-        const textBBox = tooltipTextElement.node().getBBox();
-        tooltipGroup
-          .select('.tooltip-bg')
-          .attr('x', textBBox.x - padding.x)
-          .attr('y', textBBox.y - padding.y)
-          .attr('width', textBBox.width + padding.x * 2)
-          .attr('height', textBBox.height + padding.y * 2);
-
-        // 修改事件處理器，操作整個tooltip組
-        rect
-          .on('mouseover', function () {
-            tooltipGroup.style('opacity', 1);
+          .attr('x', xPosition)
+          .attr('y', yPosition)
+          .attr('width', scaledWidth)
+          .attr('height', barHeight)
+          .attr('fill', 'transparent')
+          .attr('class', 'score-bar-overlay')
+          .on('mouseover', function (event) {
+            if (window.innerWidth > 768) {
+              showTooltipForBar(event); // 使用新的函數名
+            }
           })
           .on('mouseout', function () {
-            tooltipGroup.style('opacity', 0);
+            if (window.innerWidth > 768) {
+              hideTooltip();
+            }
           })
           .on('touchstart', function (event) {
             event.preventDefault();
-            svg.selectAll('.tooltip-group').style('opacity', 0);
-            tooltipGroup.style('opacity', 1);
+            showTooltipForBar(event); // 使用新的函數名
           })
           .on('touchend', function () {
-            setTimeout(() => {
-              tooltipGroup.style('opacity', 0);
-            }, 1500);
+            setTimeout(hideTooltip, 2000);
           });
-
-        // 修改文字顯示條件
-        // 對於所有區塊都顯示文字，不再檢查寬度
-        svg
-          .append('text')
-          .attr('class', 'count-label')
-          .attr('x', xPosition + scaledWidth / 2)
-          .attr('y', yPosition + barHeight / 2)
-          .attr('dy', '0.35em')
-          .attr('text-anchor', 'middle')
-          .attr('fill', 'white')
-          .style('font-size', '12px')
-          .text(score.grade);
 
         xPosition += scaledWidth;
       });
@@ -334,8 +362,18 @@ const IndividualSpScoreStackBarChart = ({ data }) => {
   }, [data]);
 
   return (
-    <div ref={containerRef} className="w-full h-full">
+    <div ref={containerRef} className="w-full h-full relative">
       <svg ref={svgRef} className="w-full h-full"></svg>
+      <div
+        id="tooltip"
+        className="fixed hidden bg-gray-800 text-white rounded-lg shadow-lg transition-opacity duration-200
+                   p-3"
+        style={{
+          pointerEvents: 'none',
+          zIndex: 1000,
+          minWidth: window.innerWidth <= 768 ? '250px' : '180px',
+        }}
+      />
     </div>
   );
 };

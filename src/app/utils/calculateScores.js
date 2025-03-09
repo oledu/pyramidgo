@@ -108,13 +108,25 @@ export function calculateScores(data) {
         climber.climbRecordCount[SENT_LEVEL].category = category;
 
         const totalAttempts = climber.climbRecordCount[SENT_LEVEL].total;
+        const leadingCount = climber.climbRecordCount[SENT_LEVEL].leading;
+        const rpCount = climber.climbRecordCount[SENT_LEVEL].rp;
+
+        let totalScore = 0;
+
+        // 基礎分數計算（包含超過限制的折扣）
         if (totalAttempts <= limit) {
-          climber.climbRecordCount[SENT_LEVEL].scoreTotal =
-            totalAttempts * baseScore;
+          totalScore = totalAttempts * baseScore;
         } else {
-          climber.climbRecordCount[SENT_LEVEL].scoreTotal =
+          totalScore =
             limit * baseScore + (totalAttempts - limit) * baseScore * 0.3;
         }
+
+        // 加入先鋒和確保點的額外加分
+        const leadingBonus = leadingCount * (baseScore * 0.3); // 先鋒加分：原分數的30%
+        const rpBonus = rpCount * (baseScore * 0.2); // 確保點加分：原分數的20%
+
+        climber.climbRecordCount[SENT_LEVEL].scoreTotal =
+          totalScore + leadingBonus + rpBonus;
       }
     } else {
       climber.climbRecordCount[SENT_LEVEL].isScored = 'N';

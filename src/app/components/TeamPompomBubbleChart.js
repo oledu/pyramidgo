@@ -2,7 +2,7 @@
 import { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
 
-const TeamPompomBubbleChart = ({ data }) => {
+const TeamPompomBubbleChart = ({ data, individualData }) => {
   const containerRef = useRef(null);
   const svgRef = useRef(null);
 
@@ -154,32 +154,30 @@ const TeamPompomBubbleChart = ({ data }) => {
     });
 
     const showTooltip = (event, d) => {
+      // 找出該隊伍的所有成員並排序
+      const teamMembers = individualData
+        ?.filter((member) => member.TEAM_NM === d.data.id)
+        .sort((a, b) => b.POMPOM_TOTAL - a.POMPOM_TOTAL);
+
       const tooltip = d3.select('#tooltip');
       const isMobile = window.innerWidth <= 768;
       const tooltipWidth = isMobile ? 250 : 180;
-      const tooltipHeight = 100; // 預估高度
+      const tooltipHeight = 100;
 
-      let left, top;
-
+      // 設置位置
       if (isMobile) {
-        // 手機版：置中顯示
-        left = '50%';
-        top = '50%';
         tooltip
           .style('transform', 'translate(-50%, -50%)')
-          .style('left', left)
-          .style('top', top);
+          .style('left', '50%')
+          .style('top', '50%');
       } else {
-        // 電腦版：顯示在球體旁邊
         const svgBounds = svgRef.current.getBoundingClientRect();
         const circleCenterX = svgBounds.left + d.x;
         const circleCenterY = svgBounds.top + d.y;
 
-        // 預設顯示在球體右側
-        left = `${circleCenterX + d.r + 10}px`;
-        top = `${circleCenterY - tooltipHeight / 2}px`;
+        let left = `${circleCenterX + d.r + 10}px`;
+        let top = `${circleCenterY - tooltipHeight / 2}px`;
 
-        // 如果 tooltip 會超出視窗右側，則顯示在球體左側
         if (circleCenterX + d.r + tooltipWidth + 10 > window.innerWidth) {
           left = `${circleCenterX - d.r - tooltipWidth - 10}px`;
         }
@@ -190,13 +188,36 @@ const TeamPompomBubbleChart = ({ data }) => {
           .style('top', top);
       }
 
+      // 設置內容
       tooltip.style('opacity', 1).style('display', 'block').html(`
           <div class="text-base md:text-sm p-1">
-            <div class="text-center mb-2 border-b border-gray-600 pb-2">
-              <div class="font-bold">${d.data.id}</div>
+            <div class="text-center mb-3 border-b border-gray-600 pb-2">
+              <div class="font-bold text-xl md:text-2xl mb-2">${d.data.id}</div>
+              <div class="font-bold">
+                <span class="text-gray-300">共</span>
+                <span class="text-yellow-400 text-xl md:text-2xl mx-1">${format(d.value)}</span>
+                <span class="text-gray-300">顆彩球</span>
+              </div>
             </div>
-            <div class="text-xl text-center text-yellow-400 font-bold">
-              ${format(d.value)} 顆彩球
+            <div class="max-h-[200px] overflow-y-auto">
+              ${teamMembers
+                .map(
+                  (member) => `
+                <div class="mb-1 flex justify-between items-center">
+                  <span class="truncate pr-2">${member.CLMBR_NM}</span>
+                  <div class="flex items-center gap-1">
+                    ${Array(member.POMPOM_TOTAL)
+                      .fill(0)
+                      .map(
+                        () =>
+                          `<span class="inline-block w-3 h-3 rounded-full bg-red-500"></span>`
+                      )
+                      .join('')}
+                  </div>
+                </div>
+              `
+                )
+                .join('')}
             </div>
           </div>
         `);
@@ -228,7 +249,7 @@ const TeamPompomBubbleChart = ({ data }) => {
         showTooltip(event, d);
         setTimeout(hideTooltip, 3000);
       });
-  }, [data]);
+  }, [data, individualData]);
 
   return (
     <div ref={containerRef} className="w-full h-full relative">

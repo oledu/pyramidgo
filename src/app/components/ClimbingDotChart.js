@@ -8,19 +8,25 @@ const ClimbingDotChart = ({ data }) => {
 
   const drawChart = () => {
     if (!data || !data.length) return;
-
-    // 處理數據
+    console.log('data222222', data);
+    // 處理數據並過濾無效數據
     const processedData = data
+      .filter((d) => d.CLMBR_NM && d.TEAM_NM) // 過濾空值和特定團隊
       .map((d) => ({
         name: d.CLMBR_NM,
         team: d.TEAM_NM,
         records: d.climbRecords || [],
       }))
       .sort((a, b) => {
-        if (a.team === b.team) {
-          return a.name.localeCompare(b.name);
+        const teamA = a.team;
+        const teamB = b.team;
+        const nameA = a.name;
+        const nameB = b.name;
+
+        if (teamA === teamB) {
+          return nameA.localeCompare(nameB);
         }
-        return a.team.localeCompare(b.team);
+        return teamA.localeCompare(teamB);
       });
 
     const container = containerRef.current;

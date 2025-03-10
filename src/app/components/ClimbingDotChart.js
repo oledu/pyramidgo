@@ -114,10 +114,8 @@ const ClimbingDotChart = ({ data }) => {
         const totalCount =
           dayRecords.length > 0 ? d3.sum(dayRecords, (r) => +r.SENT_COUNT) : 0;
 
-        // 先創建一個群組來包含方格和tooltip
         const cellGroup = svg.append('g').attr('class', 'cell-group');
 
-        // 繪製方格
         const rect = cellGroup
           .append('rect')
           .attr('x', x(date) - cellSize / 2)
@@ -128,72 +126,53 @@ const ClimbingDotChart = ({ data }) => {
           .attr('stroke', '#444')
           .attr('stroke-width', 1);
 
-        // 創建tooltip組
-        const tooltipGroup = cellGroup
-          .append('g')
-          .attr('class', 'tooltip-group')
-          .style('opacity', 0)
-          .style('pointer-events', 'none'); // 防止tooltip干擾事件
+        // 修改事件處理
+        const showTooltip = () => {
+          const tooltip = d3.select('#tooltip');
+          tooltip.style('opacity', 1).style('display', 'block').html(`
+              <div class="text-base md:text-sm p-1">
+                <div class="text-center mb-2 border-b border-gray-600 pb-2">
+                  <div class="font-bold">${d.name}</div>
+                  <div class="text-sm text-gray-300">隊伍：${d.team}</div>
+                </div>
+                <div class="mb-1">日期：<span class="font-bold">${date}</span></div>
+                <div class="mb-1">完成次數：<span class="font-bold">${totalCount}</span></div>
+                ${dayRecords
+                  .map(
+                    (r) =>
+                      `<div class="text-sm">- ${r.SENT_LEVEL}: ${r.SENT_COUNT}次</div>`
+                  )
+                  .join('')}
+              </div>
+            `);
+        };
 
-        // 添加背景矩形
-        const tooltipText = `日期: ${date}\n次數: ${totalCount}`;
-        const padding = { x: 8, y: 4 };
+        const hideTooltip = () => {
+          d3.select('#tooltip').style('display', 'none');
+        };
 
-        tooltipGroup
-          .append('rect')
-          .attr('class', 'tooltip-bg')
-          .attr('fill', 'rgba(0, 0, 0, 0.8)')
-          .attr('rx', 4)
-          .attr('ry', 4);
-
-        // 添加文字（分兩行）
-        const tooltipTextElement = tooltipGroup
-          .append('text')
-          .attr('class', 'tooltip-text')
-          .attr('x', x(date))
-          .attr('y', yPosition - 20)
-          .attr('text-anchor', 'middle')
-          .attr('fill', 'white')
-          .style('font-size', '12px');
-
-        tooltipTextElement
-          .append('tspan')
-          .attr('x', x(date))
-          .attr('dy', '0')
-          .text(`日期: ${date}`);
-
-        tooltipTextElement
-          .append('tspan')
-          .attr('x', x(date))
-          .attr('dy', '1.2em')
-          .text(`次數: ${totalCount}`);
-
-        // 設置tooltip背景大小
-        const textBBox = tooltipTextElement.node().getBBox();
-        tooltipGroup
-          .select('.tooltip-bg')
-          .attr('x', textBBox.x - padding.x)
-          .attr('y', textBBox.y - padding.y)
-          .attr('width', textBBox.width + padding.x * 2)
-          .attr('height', textBBox.height + padding.y * 2);
-
-        // 添加事件處理
         rect
-          .on('mouseover', function () {
-            tooltipGroup.style('opacity', 1);
+          .on('mouseover', function (event) {
+            if (window.innerWidth > 768) {
+              showTooltip();
+            }
           })
           .on('mouseout', function () {
-            tooltipGroup.style('opacity', 0);
+            if (window.innerWidth > 768) {
+              hideTooltip();
+            }
+          })
+          .on('click', function (event) {
+            event.preventDefault();
+            showTooltip();
+            // 3秒後自動隱藏
+            setTimeout(hideTooltip, 3000);
           })
           .on('touchstart', function (event) {
             event.preventDefault();
-            d3.selectAll('.tooltip-group').style('opacity', 0);
-            tooltipGroup.style('opacity', 1);
-          })
-          .on('touchend', function () {
-            setTimeout(() => {
-              tooltipGroup.style('opacity', 0);
-            }, 1500);
+            showTooltip();
+            // 3秒後自動隱藏
+            setTimeout(hideTooltip, 3000);
           });
       });
 
@@ -228,8 +207,18 @@ const ClimbingDotChart = ({ data }) => {
   }, [data]);
 
   return (
-    <div ref={containerRef} className="w-full h-full">
+    <div ref={containerRef} className="w-full h-full relative">
       <svg ref={svgRef} className="w-full h-full"></svg>
+      <div
+        id="tooltip"
+        className="fixed hidden bg-gray-800 text-white rounded-lg shadow-lg transition-opacity duration-200
+                   p-3 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+        style={{
+          pointerEvents: 'none',
+          zIndex: 1000,
+          width: window.innerWidth <= 768 ? '250px' : '180px',
+        }}
+      />
     </div>
   );
 };

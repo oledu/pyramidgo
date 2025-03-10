@@ -127,8 +127,38 @@ const ClimbingDotChart = ({ data }) => {
           .attr('stroke-width', 1);
 
         // 修改事件處理
-        const showTooltip = () => {
+        const showTooltip = (event, rect) => {
           const tooltip = d3.select('#tooltip');
+          const isMobile = window.innerWidth <= 768;
+          const tooltipWidth = isMobile ? 250 : 180;
+          const tooltipHeight = 150; // 預估高度
+
+          if (isMobile) {
+            // 手機版：置中顯示
+            tooltip
+              .style('transform', 'translate(-50%, -50%)')
+              .style('left', '50%')
+              .style('top', '50%');
+          } else {
+            // 電腦版：顯示在方格旁邊
+            const rectBounds = rect.getBoundingClientRect();
+            const svgBounds = svgRef.current.getBoundingClientRect();
+
+            // 預設顯示在方格右側
+            let left = `${rectBounds.right + 10}px`;
+            let top = `${rectBounds.top - tooltipHeight / 2 + rectBounds.height / 2}px`;
+
+            // 如果 tooltip 會超出視窗右側，則顯示在方格左側
+            if (rectBounds.right + tooltipWidth + 10 > window.innerWidth) {
+              left = `${rectBounds.left - tooltipWidth - 10}px`;
+            }
+
+            tooltip
+              .style('transform', 'none')
+              .style('left', left)
+              .style('top', top);
+          }
+
           tooltip.style('opacity', 1).style('display', 'block').html(`
               <div class="text-base md:text-sm p-1">
                 <div class="text-center mb-2 border-b border-gray-600 pb-2">
@@ -154,7 +184,7 @@ const ClimbingDotChart = ({ data }) => {
         rect
           .on('mouseover', function (event) {
             if (window.innerWidth > 768) {
-              showTooltip();
+              showTooltip(event, this);
             }
           })
           .on('mouseout', function () {
@@ -164,14 +194,12 @@ const ClimbingDotChart = ({ data }) => {
           })
           .on('click', function (event) {
             event.preventDefault();
-            showTooltip();
-            // 3秒後自動隱藏
+            showTooltip(event, this);
             setTimeout(hideTooltip, 3000);
           })
           .on('touchstart', function (event) {
             event.preventDefault();
-            showTooltip();
-            // 3秒後自動隱藏
+            showTooltip(event, this);
             setTimeout(hideTooltip, 3000);
           });
       });

@@ -90,7 +90,10 @@ const DataCharts = ({ data, loading, error }) => {
                       <h2 className="text-white text-center text-xl font-bold mb-4">
                         團隊彩球
                       </h2>
-                      <TeamPompomBubbleChart data={pompomTeam} />
+                      <TeamPompomBubbleChart
+                        data={pompomTeam}
+                        individualData={pompom}
+                      />
                     </div>
                     <div
                       style={{
@@ -240,7 +243,7 @@ const DataCharts = ({ data, loading, error }) => {
               position: 'relative',
             }}
           >
-            <TeamPompomBubbleChart data={pompomTeam} />
+            <TeamPompomBubbleChart data={pompomTeam} individualData={pompom} />
           </div>
         )}
         {activeTab === 'climbing' && (

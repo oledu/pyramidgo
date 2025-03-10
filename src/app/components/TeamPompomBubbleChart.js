@@ -107,9 +107,6 @@ const TeamPompomBubbleChart = ({ data }) => {
       .join('g')
       .attr('transform', (d) => `translate(${d.x},${d.y})`);
 
-    // 添加提示框
-    node.append('title').text((d) => `${d.data.id}\n${format(d.value)} 顆彩球`);
-
     // 添加圓圈，使用漸層填充
     node
       .append('circle')
@@ -155,11 +152,96 @@ const TeamPompomBubbleChart = ({ data }) => {
         .style('fill-opacity', '0.8') // 稍微調整透明度
         .text(format(d.value));
     });
+
+    const showTooltip = (event, d) => {
+      const tooltip = d3.select('#tooltip');
+      const isMobile = window.innerWidth <= 768;
+      const tooltipWidth = isMobile ? 250 : 180;
+      const tooltipHeight = 100; // 預估高度
+
+      let left, top;
+
+      if (isMobile) {
+        // 手機版：置中顯示
+        left = '50%';
+        top = '50%';
+        tooltip
+          .style('transform', 'translate(-50%, -50%)')
+          .style('left', left)
+          .style('top', top);
+      } else {
+        // 電腦版：顯示在球體旁邊
+        const svgBounds = svgRef.current.getBoundingClientRect();
+        const circleCenterX = svgBounds.left + d.x;
+        const circleCenterY = svgBounds.top + d.y;
+
+        // 預設顯示在球體右側
+        left = `${circleCenterX + d.r + 10}px`;
+        top = `${circleCenterY - tooltipHeight / 2}px`;
+
+        // 如果 tooltip 會超出視窗右側，則顯示在球體左側
+        if (circleCenterX + d.r + tooltipWidth + 10 > window.innerWidth) {
+          left = `${circleCenterX - d.r - tooltipWidth - 10}px`;
+        }
+
+        tooltip
+          .style('transform', 'none')
+          .style('left', left)
+          .style('top', top);
+      }
+
+      tooltip.style('opacity', 1).style('display', 'block').html(`
+          <div class="text-base md:text-sm p-1">
+            <div class="text-center mb-2 border-b border-gray-600 pb-2">
+              <div class="font-bold">${d.data.id}</div>
+            </div>
+            <div class="text-xl text-center text-yellow-400 font-bold">
+              ${format(d.value)} 顆彩球
+            </div>
+          </div>
+        `);
+    };
+
+    const hideTooltip = () => {
+      d3.select('#tooltip').style('display', 'none');
+    };
+
+    // 更新事件處理
+    node
+      .append('circle')
+      .attr('r', (d) => d.r)
+      .attr('fill', 'transparent')
+      .attr('class', 'interaction-area')
+      .style('cursor', 'pointer')
+      .on('mouseover', function (event, d) {
+        if (window.innerWidth > 768) {
+          showTooltip(event, d);
+        }
+      })
+      .on('mouseout', function () {
+        if (window.innerWidth > 768) {
+          hideTooltip();
+        }
+      })
+      .on('click', function (event, d) {
+        event.preventDefault();
+        showTooltip(event, d);
+        setTimeout(hideTooltip, 3000);
+      });
   }, [data]);
 
   return (
-    <div ref={containerRef} className="w-full h-full">
+    <div ref={containerRef} className="w-full h-full relative">
       <svg ref={svgRef} className="w-full h-full"></svg>
+      <div
+        id="tooltip"
+        className="fixed hidden bg-gray-800 text-white rounded-lg shadow-lg transition-opacity duration-200 p-3"
+        style={{
+          pointerEvents: 'none',
+          zIndex: 1000,
+          width: window.innerWidth <= 768 ? '250px' : '180px',
+        }}
+      />
     </div>
   );
 };

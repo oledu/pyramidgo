@@ -67,13 +67,15 @@ const DataCharts = ({ data, loading, error }) => {
       <div className="mt-4 h-[calc(100vh-12rem)]">
         {loading ? (
           <div className="h-full flex items-center justify-center">
-            <div className="w-96 h-96">
-              <Lottie
-                animationData={climbingAnimation}
-                loop={true}
-                autoplay={true}
-                style={{ width: '100%', height: '100%' }}
-              />
+            <div className="w-96 h-96 p-1 bg-gradient-to-r from-purple-500 via-pink-500 to-purple-500 rounded-full">
+              <div className="w-full h-full bg-black rounded-full">
+                <Lottie
+                  animationData={climbingAnimation}
+                  loop={true}
+                  autoplay={true}
+                  style={{ width: '100%', height: '100%' }}
+                />
+              </div>
             </div>
           </div>
         ) : (

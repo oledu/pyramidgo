@@ -6,32 +6,32 @@ const Banner = () => {
 
   const handlePeriodChange = (e) => {
     setSelectedPeriod(e.target.value);
-    // 這裡可以添加期數切換的邏輯
   };
 
   return (
-    <div className="w-full bg-gradient-to-r from-blue-900 to-purple-900 px-6 py-4 mb-8">
+    <div
+      className="w-full bg-black bg-opacity-10
+                    shadow-lg px-6 py-4 md:py-8"
+    >
       <div className="container mx-auto relative flex justify-between items-center">
         {/* Logo 區域 */}
         <div className="flex items-center md:absolute md:left-1/2 md:-translate-x-1/2">
-          <img
-            src="/logo.png"
-            alt="Logo"
-            className="h-12 md:h-16 w-auto" // 增加 logo 大小，並加入響應式設計
-          />
+          <img src="/logo.png" alt="Logo" className="h-12 md:h-20 w-auto" />
         </div>
 
-        {/* 在手機版時隱藏，在電腦版時顯示並佔位，確保 Logo 能置中 */}
+        {/* 在手機版時隱藏，在電腦版時顯示並佔位 */}
         <div className="hidden md:block invisible">
-          <div className="w-[180px]"></div> {/* 約等於 select 的寬度 */}
+          <div className="w-[180px]"></div>
         </div>
 
         {/* Dropdown 區域 */}
         <div className="relative">
           <select
-            className="bg-opacity-50 bg-black text-white px-6 py-3 rounded-lg 
-                       focus:outline-none focus:ring-2 focus:ring-emerald-400 
-                       text-lg hover:bg-opacity-70 transition-all"
+            className="bg-black bg-opacity-20 text-white px-6 py-3 
+                     rounded-lg border border-white/20
+                     focus:outline-none focus:ring-2 focus:ring-white/30 
+                     text-lg hover:bg-opacity-30 transition-all
+                     shadow-sm"
             value={selectedPeriod}
             onChange={handlePeriodChange}
           >

@@ -19,10 +19,10 @@ export default function Home() {
 
   return (
     <>
-      <Banner />
       <Background3D />
       {/* <LogoImg /> */}
       <MarqueeText data={data} />
+      <Banner />
       <DataCharts data={data} loading={loading} error={error} />
     </>
   );

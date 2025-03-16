@@ -4,6 +4,7 @@ import { useAllData } from './hooks/useData';
 import LogoImg from './components/LogoImg';
 import MarqueeText from './components/MarqueeText';
 import DataCharts from './components/DataCharts';
+import Banner from './components/Banner';
 
 // 動態導入 Background3D 組件，並禁用 SSR
 const Background3D = dynamic(() => import('./components/Background3D'), {
@@ -17,11 +18,12 @@ export default function Home() {
   console.log('data111', data);
 
   return (
-    <main className="flex min-h-screen flex-col items-center">
+    <>
+      <Banner />
       <Background3D />
-      <LogoImg />
+      {/* <LogoImg /> */}
       <MarqueeText data={data} />
       <DataCharts data={data} loading={loading} error={error} />
-    </main>
+    </>
   );
 }

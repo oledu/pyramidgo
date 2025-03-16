@@ -15,7 +15,7 @@ const MarqueeText = ({ data }) => {
   return (
     <div className="w-full h-8 overflow-hidden bg-gradient-to-r from-blue-500 to-purple-500 relative flex items-center">
       <div
-        className="absolute whitespace-nowrap animate-marquee text-sm font-medium text-white"
+        className="absolute whitespace-nowrap animate-marquee md:animate-marquee-desktop text-sm font-medium text-white"
         style={{ left: '100%' }}
       >
         {marqueeTexts}

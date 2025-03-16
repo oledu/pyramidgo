@@ -11,7 +11,8 @@ module.exports = {
         '3xl': '1400px',
       },
       animation: {
-        marquee: 'marquee 25s linear infinite',
+        marquee: 'marquee 15s linear infinite',
+        'marquee-desktop': 'marquee 25s linear infinite',
       },
       keyframes: {
         marquee: {

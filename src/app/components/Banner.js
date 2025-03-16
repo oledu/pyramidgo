@@ -1,10 +1,14 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 
-const Banner = () => {
-  const [selectedPeriod, setSelectedPeriod] = useState('202502T');
+const Banner = ({ onPeriodChange }) => {
+  const [selectedPeriod, setSelectedPeriod] = useState('202501T');
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    onPeriodChange('202501T');
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -19,7 +23,13 @@ const Banner = () => {
     };
   }, []);
 
-  const periods = ['202501T', '202502T'];
+  const periods = ['202501T'];
+
+  const handlePeriodSelect = (period) => {
+    setSelectedPeriod(period);
+    setIsOpen(false);
+    onPeriodChange(period);
+  };
 
   return (
     <div className="w-full bg-black bg-opacity-10 shadow-lg px-6 py-4 md:py-8">
@@ -78,10 +88,7 @@ const Banner = () => {
                                ? 'bg-purple-500 text-white'
                                : 'text-gray-300 hover:bg-gray-800 hover:text-white'
                            }`}
-                  onClick={() => {
-                    setSelectedPeriod(period);
-                    setIsOpen(false);
-                  }}
+                  onClick={() => handlePeriodSelect(period)}
                 >
                   {period}
                 </button>

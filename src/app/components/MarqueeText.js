@@ -2,12 +2,15 @@ const MarqueeText = ({ data }) => {
   const { marquee = [] } = data || {};
 
   // 從 marquee 數組中獲取所有 TEXT 欄位並組合，加入分隔符
-  const marqueeTexts = marquee.map((item, index) => (
-    <span key={item.TEXT}>
+  const marqueeTexts = marquee.map((item, index) => {
+    if (!item.TEXT) return null; // 跳過 TEXT 為空的項目
+    return (
+      <span key={item.TEXT}>
       <span className="mx-2">{item.TEXT}</span>
-      <span className="text-yellow-300">{'★'}</span>
+      <span className="text-yellow-300">{'▲'}</span>
     </span>
-  ));
+    );
+  });
 
   // 如果沒有文字則不顯示整個元素
   if (marqueeTexts.length === 0) return null;

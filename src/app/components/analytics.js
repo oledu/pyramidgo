@@ -3,7 +3,7 @@
 import { usePathname } from 'next/navigation';
 import { useEffect } from 'react';
 
-const GA_TRACKING_ID = 'G-EVLBF0EKRQ'; // 替換你的 GA4 ID
+const GA_TRACKING_ID = 'G-EVLBF0EKRQ';
 
 export default function Analytics() {
   const pathname = usePathname();
@@ -12,6 +12,8 @@ export default function Analytics() {
     if (typeof window !== 'undefined' && window.gtag) {
       window.gtag('config', GA_TRACKING_ID, {
         page_path: pathname,
+        cookie_flags: 'SameSite=None; Secure',
+        cookie_domain: 'auto',
       });
     }
   }, [pathname]);

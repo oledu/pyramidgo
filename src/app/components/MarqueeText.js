@@ -21,6 +21,7 @@ const MarqueeText = ({ data }) => {
         className="absolute whitespace-nowrap animate-marquee md:animate-marquee-desktop text-sm font-medium text-white"
         style={{ left: '100%' }}
       >
+        <span className="text-yellow-300">{'▲'}</span>
         {marqueeTexts}
       </div>
     </div>

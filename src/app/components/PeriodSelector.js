@@ -6,6 +6,11 @@ const PeriodSelector = ({ onPeriodChange }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
+  const periods = [
+    { key: '202502T', label: '航行中 2025/03/16-03/28' },
+    { key: '202501T', label: '已降落 2025/03/02-03/15' },
+  ];
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -19,29 +24,33 @@ const PeriodSelector = ({ onPeriodChange }) => {
     };
   }, []);
 
-  const periods = ['202501T', '202502T'];
-
-  const handlePeriodSelect = (period) => {
-    setSelectedPeriod(period);
+  const handlePeriodSelect = (periodKey) => {
+    setSelectedPeriod(periodKey);
     setIsOpen(false);
-    onPeriodChange(period);
+    onPeriodChange(periodKey);
   };
 
+  // 找到當前選擇的期間的顯示文字
+  const selectedLabel = periods.find((p) => p.key === selectedPeriod)?.label;
+
   return (
-    <div className="relative w-[100px] md:w-[120px]" ref={dropdownRef}>
+    <div className="relative w-[300px] md:w-[320px]" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full pl-3 pr-2 md:pl-4 md:pr-3 py-1.5 bg-black/40 text-white
-                 rounded-full border border-white/20
-                 flex justify-between items-center gap-1 md:gap-2
-                 hover:bg-black/50 hover:border-white/30 
-                 transition-all"
+        className="w-full pl-8 pr-6 md:pl-10 md:pr-8 py-2 
+                 rounded-full
+                 flex justify-between items-center gap-4 md:gap-6
+                 transition-all
+                 bg-black
+                 border border-white/20
+                 hover:border-purple-500"
       >
-        <span className="text-sm md:text-base">{selectedPeriod}</span>
+        <span className="text-base md:text-lg font-bold text-transparent bg-gradient-to-r from-purple-500 via-pink-500 to-purple-500 bg-clip-text">
+          {selectedLabel}
+        </span>
         <svg
-          className={`w-3.5 h-3.5 md:w-4 md:h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+          className={`w-4 h-4 md:w-5 md:h-5 transition-transform stroke-purple-500 ${isOpen ? 'rotate-180' : ''}`}
           fill="none"
-          stroke="currentColor"
           viewBox="0 0 24 24"
         >
           <path
@@ -55,23 +64,25 @@ const PeriodSelector = ({ onPeriodChange }) => {
 
       {isOpen && (
         <div
-          className="absolute w-full mt-1 bg-black/90 rounded-xl 
+          className="absolute w-full mt-2 bg-black
                     shadow-lg overflow-hidden z-50
-                    border border-white/10"
+                    border border-white/20 rounded-2xl"
         >
-          {periods.map((period) => (
+          {periods.map((period, index) => (
             <button
-              key={period}
-              className={`w-full px-3 md:px-4 py-1.5 text-left text-sm md:text-base
+              key={period.key}
+              className={`w-full px-8 md:px-10 py-2 text-left text-base md:text-lg font-bold
                        transition-colors
+                       ${index === 0 ? 'rounded-t-2xl' : ''}
+                       ${index === periods.length - 1 ? 'rounded-b-2xl' : ''}
                        ${
-                         selectedPeriod === period
-                           ? 'bg-purple-500 text-white'
-                           : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                         selectedPeriod === period.key
+                           ? 'text-transparent bg-gradient-to-r from-purple-500 via-pink-500 to-purple-500 bg-clip-text'
+                           : 'text-white hover:text-transparent hover:bg-gradient-to-r hover:from-purple-500 hover:via-pink-500 hover:to-purple-500 hover:bg-clip-text'
                        }`}
-              onClick={() => handlePeriodSelect(period)}
+              onClick={() => handlePeriodSelect(period.key)}
             >
-              {period}
+              {period.label}
             </button>
           ))}
         </div>

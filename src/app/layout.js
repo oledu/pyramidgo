@@ -12,7 +12,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: 'PYRAMID GO', description: '攀岩金字塔俱樂部',
+  title: 'PYRAMID GO', description: 'PYRAMID GO|攀岩金字塔俱樂部',
 };
 
 const GA_TRACKING_ID = 'G-EVLBF0EKRQ'; // 替換成你的 GA ID

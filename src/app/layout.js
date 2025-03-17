@@ -22,16 +22,6 @@ const GA_TRACKING_ID = 'G-EVLBF0EKRQ'; // 替換成你的 GA ID
 
 
 export default function RootLayout({ children }) {
-  const pathname = usePathname();
-
-  useEffect(() => {
-    if (typeof window !== 'undefined' && window.gtag) {
-      window.gtag('config', GA_TRACKING_ID, {
-        page_path: pathname,
-      });
-    }
-  }, [pathname]);
-
   return (<html lang="en">
   <head>
     {/* Google Analytics 4 代碼 */}

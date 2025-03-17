@@ -2,7 +2,7 @@
 import { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
 
-const ClimbingDotChart = ({ data }) => {
+const ClimbingDotChart = ({ data, period }) => {
   const containerRef = useRef(null);
   const svgRef = useRef(null);
 
@@ -59,8 +59,19 @@ const ClimbingDotChart = ({ data }) => {
       .append('g')
       .attr('transform', `translate(${margin.left},${margin.top})`);
 
+    const getDateRange = (period) => {
+      switch (period) {
+        case '202501T':
+          return d3.range(2, 16).map((d) => `3/${d}`); // 3/2q-3/15
+        case '202502T':
+          return d3.range(16, 29).map((d) => `3/${d}`); // 3/16-3/28
+        default:
+          return d3.range(2, 16).map((d) => `3/${d}`); // 預設值
+      }
+    };
+
     // 建立日期範圍
-    const dateRange = d3.range(2, 16).map((d) => `3/${d}`);
+    const dateRange = getDateRange(period);
     const x = d3.scalePoint().domain(dateRange).range([0, width]).padding(0.5);
 
     // 顏色比例尺

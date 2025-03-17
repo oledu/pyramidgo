@@ -1,11 +1,9 @@
 'use client';
 import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
-import { useAllData } from './hooks/useData';
 import LogoImg from './components/LogoImg';
 import MarqueeText from './components/MarqueeText';
 import DataCharts from './components/DataCharts';
-import Banner from './components/Banner';
 import { fetchData } from './services/api';
 
 // 動態導入 Background3D 組件，並禁用 SSR
@@ -39,10 +37,14 @@ export default function Home() {
   return (
     <main className="min-h-screen">
       <Background3D />
-      {/* <LogoImg /> */}
-      <Banner onPeriodChange={handlePeriodChange} />
       <MarqueeText data={data} />
-      <DataCharts data={data} loading={loading} error={error} />
+      <LogoImg />
+      <DataCharts
+        data={data}
+        loading={loading}
+        error={error}
+        onPeriodChange={handlePeriodChange}
+      />
     </main>
   );
 }

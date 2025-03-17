@@ -9,13 +9,25 @@ import BeastScoreListChart from './BeastScoreListChart';
 import IndividualSpScoreStackBarChart from './IndividualSpScoreStackBarChart';
 import IndividualBldScoreStackBarChart from './IndividualBldScoreStackBarChart';
 import ClimbingDotChart from './ClimbingDotChart';
-import Lottie from 'lottie-react';
+// import Lottie from 'lottie-react';
+import dynamic from 'next/dynamic';
 import climbingAnimation from '../animations/climbing.json';
+import PeriodSelector from './PeriodSelector';
 
-const DataCharts = ({ data, loading, error }) => {
+const Lottie = dynamic(() => import('lottie-react'), {
+  ssr: false, // 禁用服務器端渲染
+});
+
+const DataCharts = ({ data, loading, error, onPeriodChange }) => {
   const [activeTab, setActiveTab] = useState('overview');
+  const [currentPeriod, setCurrentPeriod] = useState('202502T');
 
   console.log('data', data);
+
+  const handlePeriodChange = (period) => {
+    setCurrentPeriod(period);
+    onPeriodChange(period);
+  };
 
   let scores = calculateScores(data);
   console.log('scores', scores);
@@ -64,6 +76,10 @@ const DataCharts = ({ data, loading, error }) => {
         </nav>
       </div>
 
+      <div className="flex justify-center px-4 pt-4">
+        <PeriodSelector onPeriodChange={handlePeriodChange} />
+      </div>
+
       <div className="mt-4 h-[calc(100vh-12rem)]">
         {loading ? (
           <div className="h-full flex items-center justify-center">
@@ -82,7 +98,7 @@ const DataCharts = ({ data, loading, error }) => {
           <>
             {activeTab === 'overview' && (
               <div className="w-full space-y-8">
-                <div className="flex justify-center w-full mt-10 mb-10">
+                <div className="flex justify-center w-full mb-10">
                   <div
                     style={{
                       minWidth: '350px',
@@ -173,9 +189,12 @@ const DataCharts = ({ data, loading, error }) => {
                           className="p-2"
                         >
                           <h2 className="text-white text-center text-xl font-bold mb-4">
-                            攀爬日記(3/2~3/15)
+                            攀爬日記
                           </h2>
-                          <ClimbingDotChart data={scores} />
+                          <ClimbingDotChart
+                            data={scores}
+                            period={currentPeriod}
+                          />
                         </div>
                         <div
                           style={{
@@ -273,7 +292,7 @@ const DataCharts = ({ data, loading, error }) => {
                   position: 'relative',
                 }}
               >
-                <ClimbingDotChart data={scores} />
+                <ClimbingDotChart data={scores} period={currentPeriod} />
               </div>
             )}
           </>

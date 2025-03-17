@@ -1,10 +1,7 @@
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import Script from 'next/script';
-import { usePathname } from 'next/navigation';
-import { useEffect } from 'react';
-import Analytics from './components/analytics'; // 確保路徑正確
-
+import Analytics from './components/analytics';
 
 const geistSans = Geist({
   variable: '--font-geist-sans', subsets: ['latin'],

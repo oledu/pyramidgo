@@ -41,11 +41,10 @@ const PeriodSelector = ({ onPeriodChange }) => {
                  rounded-full
                  flex justify-between items-center gap-4 md:gap-6
                  transition-all
-                 bg-black
-                 border border-white/20
-                 hover:border-purple-500"
+                 bg-black/80
+                 border border-purple-500"
       >
-        <span className="text-base md:text-lg font-bold text-transparent bg-gradient-to-r from-purple-500 via-pink-500 to-purple-500 bg-clip-text">
+        <span className="text-base md:text-lg font-extrabold text-transparent bg-gradient-to-r from-purple-500 via-pink-500 to-purple-500 bg-clip-text">
           {selectedLabel}
         </span>
         <svg
@@ -64,14 +63,14 @@ const PeriodSelector = ({ onPeriodChange }) => {
 
       {isOpen && (
         <div
-          className="absolute w-full mt-2 bg-black
+          className="absolute w-full mt-2 bg-black/80
                     shadow-lg overflow-hidden z-50
-                    border border-white/20 rounded-2xl"
+                    border border-purple-500 rounded-2xl"
         >
           {periods.map((period, index) => (
             <button
               key={period.key}
-              className={`w-full px-8 md:px-10 py-2 text-left text-base md:text-lg font-bold
+              className={`w-full px-8 md:px-10 py-2 text-left text-base md:text-lg font-extrabold
                        transition-colors
                        ${index === 0 ? 'rounded-t-2xl' : ''}
                        ${index === periods.length - 1 ? 'rounded-b-2xl' : ''}

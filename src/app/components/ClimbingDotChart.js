@@ -75,7 +75,7 @@ const ClimbingDotChart = ({ data, period }) => {
     const dateRange = getDateRange(period);
     const x = d3.scalePoint().domain(dateRange).range([0, width]).padding(0.5);
 
-    // 修改顏色函數，使用深紅到淺紅的漸變
+    // 修改顏色函數，使用深紅到淺紅的漸變1
     const getColor = (value) => {
       if (value === 0) return '#1a1a2e'; // 深藍黑色背景
       if (value > 0 && value <= 5) return '#800000'; // 深紅色 - 較少

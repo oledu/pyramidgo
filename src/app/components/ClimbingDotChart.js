@@ -32,7 +32,9 @@ const ClimbingDotChart = ({ data, period }) => {
     const containerWidth = container.clientWidth;
     const margin = { top: 20, right: 30, bottom: 40, left: 80 };
     const width = containerWidth - margin.left - margin.right;
-    const cellSize = 25;
+    const cellWidth = 20; // 固定寬度
+    const cellHeight = 20; // 固定高度
+    const cellPadding = 2; // 格子間距
     const teamHeaderHeight = 40;
 
     // 計算總高度
@@ -43,7 +45,7 @@ const ClimbingDotChart = ({ data, period }) => {
         totalHeight += teamHeaderHeight;
         currentTeam = d.team;
       }
-      totalHeight += cellSize + 5;
+      totalHeight += cellHeight + cellPadding;
     });
 
     const height = totalHeight;
@@ -73,12 +75,15 @@ const ClimbingDotChart = ({ data, period }) => {
     const dateRange = getDateRange(period);
     const x = d3.scalePoint().domain(dateRange).range([0, width]).padding(0.5);
 
-    // 顏色比例尺
-    const colorScale = d3
-      .scaleLinear()
-      .domain([0, 5, 10, 15, 25])
-      .range(['#ffffff', '#ffcdd2', '#e57373', '#f44336', '#b71c1c'])
-      .clamp(true);
+    // 修改顏色函數，根據攀爬條數分級
+    const getColor = (value) => {
+      if (value === 0) return '#ebedf0'; // 0 條
+      if (value > 0 && value <= 5) return '#9be9a8'; // 1-5 條
+      if (value > 5 && value <= 10) return '#40c463'; // 6-10 條
+      if (value > 10 && value <= 15) return '#30a14e'; // 11-15 條
+      if (value > 15) return '#216e39'; // 16 條以上
+      return '#ebedf0'; // 默認
+    };
 
     let yPosition = 0;
     currentTeam = null;
@@ -117,7 +122,7 @@ const ClimbingDotChart = ({ data, period }) => {
         .append('text')
         .attr('class', 'name-label')
         .attr('x', -5)
-        .attr('y', yPosition + cellSize / 2)
+        .attr('y', yPosition + cellHeight / 2)
         .attr('dy', '0.35em')
         .attr('text-anchor', 'end')
         .attr('fill', 'white')
@@ -134,11 +139,11 @@ const ClimbingDotChart = ({ data, period }) => {
 
         const rect = cellGroup
           .append('rect')
-          .attr('x', x(date) - cellSize / 2)
+          .attr('x', x(date) - cellWidth / 2)
           .attr('y', yPosition)
-          .attr('width', cellSize)
-          .attr('height', cellSize)
-          .attr('fill', colorScale(totalCount))
+          .attr('width', cellWidth)
+          .attr('height', cellHeight)
+          .attr('fill', getColor(totalCount))
           .attr('stroke', '#444')
           .attr('stroke-width', 1);
 
@@ -184,11 +189,11 @@ const ClimbingDotChart = ({ data, period }) => {
                 <div class="mb-1">日期：<span class="font-bold">${date}</span></div>
                 <div class="mb-1">完成次數：<span class="font-bold">${totalCount}</span></div>
                 ${dayRecords
-            .map(
-              (r) =>
-                `<div class="text-sm">- ${r.SENT_LEVEL}: ${r.SENT_COUNT}次</div>`,
-            )
-            .join('')}
+                  .map(
+                    (r) =>
+                      `<div class="text-sm">- ${r.SENT_LEVEL}: ${r.SENT_COUNT}次</div>`
+                  )
+                  .join('')}
               </div>
             `);
         };
@@ -198,29 +203,29 @@ const ClimbingDotChart = ({ data, period }) => {
         };
 
         rect
-          .on('mouseover', function(event) {
+          .on('mouseover', function (event) {
             if (window.innerWidth > 768) {
               showTooltip(event, this);
             }
           })
-          .on('mouseout', function() {
+          .on('mouseout', function () {
             if (window.innerWidth > 768) {
               hideTooltip();
             }
           })
-          .on('click', function(event) {
+          .on('click', function (event) {
             event.preventDefault();
             showTooltip(event, this);
             setTimeout(hideTooltip, 3000);
           })
-          .on('touchstart', function(event) {
+          .on('touchstart', function (event) {
             event.preventDefault();
             showTooltip(event, this);
             setTimeout(hideTooltip, 3000);
           });
       });
 
-      yPosition += cellSize + 5;
+      yPosition += cellHeight + cellPadding;
     });
 
     // 添加 X 軸

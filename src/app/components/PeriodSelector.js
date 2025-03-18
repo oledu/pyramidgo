@@ -7,7 +7,7 @@ const PeriodSelector = ({ onPeriodChange }) => {
   const dropdownRef = useRef(null);
 
   const periods = [
-    { key: '202502T', label: '航行中 2025/03/16~03/28' },
+    { key: '202502T', label: '航行中 2025/03/16~03/29' },
     { key: '202501T', label: '已完成 2025/03/02~03/15' },
   ];
 

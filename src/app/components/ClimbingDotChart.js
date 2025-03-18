@@ -8,7 +8,6 @@ const ClimbingDotChart = ({ data, period }) => {
 
   const drawChart = () => {
     if (!data || !data.length) return;
-    console.log('data222222', data);
     // 處理數據並過濾無效數據
     const processedData = data
       .filter((d) => d.CLMBR_NM && d.TEAM_NM) // 過濾空值和特定團隊
@@ -64,9 +63,9 @@ const ClimbingDotChart = ({ data, period }) => {
         case '202501T':
           return d3.range(2, 16).map((d) => `3/${d}`); // 3/2q-3/15
         case '202502T':
-          return d3.range(16, 29).map((d) => `3/${d}`); // 3/16-3/28
+          return d3.range(16, 30).map((d) => `3/${d}`); // 3/16-3/28
         default:
-          return d3.range(2, 16).map((d) => `3/${d}`); // 預設值
+          return d3.range(16, 30).map((d) => `3/${d}`); // 預設值
       }
     };
 
@@ -77,7 +76,7 @@ const ClimbingDotChart = ({ data, period }) => {
     // 顏色比例尺
     const colorScale = d3
       .scaleLinear()
-      .domain([0, 1, 10, 50, 100])
+      .domain([0, 5, 10, 15, 25])
       .range(['#ffffff', '#ffcdd2', '#e57373', '#f44336', '#b71c1c'])
       .clamp(true);
 
@@ -185,11 +184,11 @@ const ClimbingDotChart = ({ data, period }) => {
                 <div class="mb-1">日期：<span class="font-bold">${date}</span></div>
                 <div class="mb-1">完成次數：<span class="font-bold">${totalCount}</span></div>
                 ${dayRecords
-                  .map(
-                    (r) =>
-                      `<div class="text-sm">- ${r.SENT_LEVEL}: ${r.SENT_COUNT}次</div>`
-                  )
-                  .join('')}
+            .map(
+              (r) =>
+                `<div class="text-sm">- ${r.SENT_LEVEL}: ${r.SENT_COUNT}次</div>`,
+            )
+            .join('')}
               </div>
             `);
         };
@@ -199,22 +198,22 @@ const ClimbingDotChart = ({ data, period }) => {
         };
 
         rect
-          .on('mouseover', function (event) {
+          .on('mouseover', function(event) {
             if (window.innerWidth > 768) {
               showTooltip(event, this);
             }
           })
-          .on('mouseout', function () {
+          .on('mouseout', function() {
             if (window.innerWidth > 768) {
               hideTooltip();
             }
           })
-          .on('click', function (event) {
+          .on('click', function(event) {
             event.preventDefault();
             showTooltip(event, this);
             setTimeout(hideTooltip, 3000);
           })
-          .on('touchstart', function (event) {
+          .on('touchstart', function(event) {
             event.preventDefault();
             showTooltip(event, this);
             setTimeout(hideTooltip, 3000);

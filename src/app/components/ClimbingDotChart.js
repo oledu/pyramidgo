@@ -75,14 +75,14 @@ const ClimbingDotChart = ({ data, period }) => {
     const dateRange = getDateRange(period);
     const x = d3.scalePoint().domain(dateRange).range([0, width]).padding(0.5);
 
-    // 修改顏色函數，根據攀爬條數分級
+    // 修改顏色函數，使用深紅到淺紅的漸變
     const getColor = (value) => {
-      if (value === 0) return '#ebedf0'; // 0 條
-      if (value > 0 && value <= 5) return '#9be9a8'; // 1-5 條
-      if (value > 5 && value <= 10) return '#40c463'; // 6-10 條
-      if (value > 10 && value <= 15) return '#30a14e'; // 11-15 條
-      if (value > 15) return '#216e39'; // 16 條以上
-      return '#ebedf0'; // 默認
+      if (value === 0) return '#1a1a2e'; // 深藍黑色背景
+      if (value > 0 && value <= 5) return '#800000'; // 深紅色 - 較少
+      if (value > 5 && value <= 10) return '#b30000'; // 中深紅色 - 中等
+      if (value > 10 && value <= 15) return '#e60000'; // 中紅色 - 較多
+      if (value > 15) return '#ff6666'; // 淺紅色 - 最多
+      return '#1a1a2e'; // 默認
     };
 
     let yPosition = 0;
@@ -143,6 +143,8 @@ const ClimbingDotChart = ({ data, period }) => {
           .attr('y', yPosition)
           .attr('width', cellWidth)
           .attr('height', cellHeight)
+          .attr('rx', 4)
+          .attr('ry', 4)
           .attr('fill', getColor(totalCount))
           .attr('stroke', '#444')
           .attr('stroke-width', 1);

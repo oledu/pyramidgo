@@ -25,10 +25,10 @@ const TeamPompomBubbleChart = ({ data, individualData }) => {
     // 設定數值格式
     const format = d3.format(',d');
 
-    // 修改顏色比例尺，使顏色更暗沉
+    // 修改顏色比例尺
     const color = d3
       .scaleOrdinal()
-      .range(d3.schemeTableau10.map((c) => d3.rgb(c).darker(0.3)));
+      .range(d3.schemeTableau10);
 
     // 建立pack布局，增加padding值
     const pack = d3
@@ -56,22 +56,24 @@ const TeamPompomBubbleChart = ({ data, individualData }) => {
     // 在 SVG 定義中添加漸層
     const defs = svg.append('defs');
 
-    // 為每個球體創建獨特的漸層
+    // 為每個球體創建漸層
     root.leaves().forEach((node, i) => {
       const gradientId = `gradient-${i}`;
       const baseColor = color(node.data.id);
-
+      
+      // 創建徑向漸層
       const gradient = defs
         .append('radialGradient')
         .attr('id', gradientId)
-        .attr('cx', '35%')
-        .attr('cy', '35%')
-        .attr('r', '60%');
+        .attr('cx', '30%')
+        .attr('cy', '30%')
+        .attr('r', '70%');
 
+      // 添加漸層步驟
       gradient
         .append('stop')
         .attr('offset', '0%')
-        .attr('stop-color', d3.rgb(baseColor).brighter(0.3))
+        .attr('stop-color', d3.rgb(baseColor).brighter(0.7))
         .attr('stop-opacity', 1);
 
       gradient
@@ -83,7 +85,7 @@ const TeamPompomBubbleChart = ({ data, individualData }) => {
       gradient
         .append('stop')
         .attr('offset', '100%')
-        .attr('stop-color', d3.rgb(baseColor).darker(0.5))
+        .attr('stop-color', d3.rgb(baseColor).darker(0.7))
         .attr('stop-opacity', 1);
 
       // 為每個球體添加水平弧形文字路徑
@@ -119,8 +121,9 @@ const TeamPompomBubbleChart = ({ data, individualData }) => {
       .attr('r', (d) => d.r)
       .attr('fill', 'none')
       .attr('stroke', '#000')
-      .attr('stroke-width', 0.5)
-      .attr('stroke-opacity', 0.1);
+      .attr('stroke-width', 1)
+      .attr('stroke-opacity', 0.2)
+      .style('filter', 'blur(1px)');
 
     // 添加文字組
     const textGroups = node.append('g');

@@ -156,32 +156,37 @@ const TeamPompomBubbleChart = ({ data, individualData }) => {
     const simulation = d3
       .forceSimulation(root.leaves())
       .force('center', d3.forceCenter(width / 2, height / 2))
-      .force('charge', d3.forceManyBody().strength(5))
+      .force('charge', d3.forceManyBody().strength(2))
       .force(
         'collide',
         d3
           .forceCollide()
-          .radius((d) => d.r + 2)
-          .strength(0.5)
+          .radius((d) => d.r)
+          .strength(0.8)
       )
       .force(
         'x',
         d3
           .forceX()
           .x((d) => d.x)
-          .strength(0.05)
+          .strength(0.15)
       )
       .force(
         'y',
         d3
           .forceY()
           .y((d) => d.y)
-          .strength(0.05)
+          .strength(0.15)
       );
 
     // 更新節點位置
     simulation.on('tick', () => {
-      node.attr('transform', (d) => `translate(${d.x},${d.y})`);
+      node.attr('transform', (d) => {
+        // 添加边界限制
+        d.x = Math.max(d.r, Math.min(width - d.r, d.x));
+        d.y = Math.max(d.r, Math.min(height - d.r, d.y));
+        return `translate(${d.x},${d.y})`;
+      });
     });
 
     // 添加拖拽行為
@@ -194,8 +199,9 @@ const TeamPompomBubbleChart = ({ data, individualData }) => {
           d.fy = d.y;
         })
         .on('drag', (event, d) => {
-          d.fx = event.x;
-          d.fy = event.y;
+          // 限制拖拽范围
+          d.fx = Math.max(d.r, Math.min(width - d.r, event.x));
+          d.fy = Math.max(d.r, Math.min(height - d.r, event.y));
         })
         .on('end', (event, d) => {
           if (!event.active) simulation.alphaTarget(0);

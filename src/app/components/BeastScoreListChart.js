@@ -152,7 +152,12 @@ const BeastScoreListChart = ({ data }) => {
       .attr('x', (d, i) => (i < 3 ? 35 : 10))
       .attr('y', itemHeight / 2)
       .attr('dy', '0.35em')
-      .attr('fill', 'white')
+      .attr('fill', (d, i) => {
+        if (i === 0) return '#FFD700'; // 金色
+        if (i === 1) return '#C0C0C0'; // 銀色
+        if (i === 2) return '#CD7F32'; // 銅色
+        return 'white'; // 其他維持白色
+      })
       .style('font-size', (d, i) => (i < 3 ? '18px' : '16px'))
       .style('font-weight', (d, i) => (i < 3 ? 'bold' : 'normal'))
       .text((d) => d.CLMBR_NM);

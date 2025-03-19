@@ -156,33 +156,58 @@ const TeamPompomBubbleChart = ({ data, individualData }) => {
     const simulation = d3
       .forceSimulation(root.leaves())
       .force('center', d3.forceCenter(width / 2, height / 2))
-      .force('charge', d3.forceManyBody().strength(2))
+      .force('charge', d3.forceManyBody().strength(-30))  // 增加排斥力
       .force(
         'collide',
         d3
           .forceCollide()
-          .radius((d) => d.r)
-          .strength(0.8)
+          .radius((d) => d.r + 1)  // 添加一点点间距
+          .strength(1)  // 最大碰撞强度
+          .iterations(3)  // 增加迭代次数以提高精确度
       )
       .force(
         'x',
         d3
           .forceX()
           .x((d) => d.x)
-          .strength(0.15)
+          .strength(0.2)
       )
       .force(
         'y',
         d3
           .forceY()
           .y((d) => d.y)
-          .strength(0.15)
+          .strength(0.2)
       );
 
     // 更新節點位置
     simulation.on('tick', () => {
+      // 在每次tick时进行碰撞检测
+      for (let i = 0; i < 3; i++) {  // 多次迭代以确保分离
+        root.leaves().forEach((d1) => {
+          root.leaves().forEach((d2) => {
+            if (d1 !== d2) {
+              const dx = d1.x - d2.x;
+              const dy = d1.y - d2.y;
+              const distance = Math.sqrt(dx * dx + dy * dy);
+              const minDistance = d1.r + d2.r;
+              
+              if (distance < minDistance) {
+                const moveX = (dx / distance) * (minDistance - distance) * 0.5;
+                const moveY = (dy / distance) * (minDistance - distance) * 0.5;
+                
+                d1.x += moveX;
+                d1.y += moveY;
+                d2.x -= moveX;
+                d2.y -= moveY;
+              }
+            }
+          });
+        });
+      }
+
+      // 应用边界限制
       node.attr('transform', (d) => {
-        // 添加边界限制
         d.x = Math.max(d.r, Math.min(width - d.r, d.x));
         d.y = Math.max(d.r, Math.min(height - d.r, d.y));
         return `translate(${d.x},${d.y})`;

@@ -104,18 +104,17 @@ const TeamPompomBubbleChart = ({ data, individualData }) => {
       .append('g')
       .selectAll()
       .data(root.leaves())
-      .join('g')
-      .attr('transform', (d) => `translate(${d.x},${d.y})`);
+      .join('g');
 
     // 添加圓圈，使用漸層填充
-    node
+    const circles = node
       .append('circle')
-      .attr('fill-opacity', 1) // 改為不透明
-      .attr('fill', (d, i) => `url(#gradient-${i})`) // 使用漸層
+      .attr('fill-opacity', 1)
+      .attr('fill', (d, i) => `url(#gradient-${i})`)
       .attr('r', (d) => d.r);
 
     // 添加陰影效果
-    node
+    const shadows = node
       .append('circle')
       .attr('r', (d) => d.r)
       .attr('fill', 'none')
@@ -130,28 +129,103 @@ const TeamPompomBubbleChart = ({ data, individualData }) => {
     textGroups.each(function (d, i) {
       const textGroup = d3.select(this);
 
-      // 添加隊名（改為黑色）
+      // 添加隊名
       textGroup
         .append('text')
         .style('font-size', `${Math.min(d.r / 3.5, 14)}px`)
         .style('font-weight', 'bold')
-        .style('fill', '#000000') // 改為黑色
+        .style('fill', '#000000')
         .append('textPath')
         .attr('href', `#textPath-${i}`)
         .attr('startOffset', '50%')
         .attr('text-anchor', 'middle')
         .text(d.data.id);
 
-      // 添加數字（改為黑色）
+      // 添加數字
       textGroup
         .append('text')
         .attr('text-anchor', 'middle')
         .attr('dy', `${d.r * 0.3}px`)
-        .style('fill', '#000000') // 改為黑色
+        .style('fill', '#000000')
         .style('font-size', `${Math.min(d.r / 3.5, 14)}px`)
-        .style('fill-opacity', '0.8') // 稍微調整透明度
+        .style('fill-opacity', '0.8')
         .text(format(d.value));
     });
+
+    // 創建力導向模擬
+    const simulation = d3
+      .forceSimulation(root.leaves())
+      .force('center', d3.forceCenter(width / 2, height / 2))
+      .force('charge', d3.forceManyBody().strength(5))
+      .force(
+        'collide',
+        d3
+          .forceCollide()
+          .radius((d) => d.r + 2)
+          .strength(0.5)
+      )
+      .force(
+        'x',
+        d3
+          .forceX()
+          .x((d) => d.x)
+          .strength(0.05)
+      )
+      .force(
+        'y',
+        d3
+          .forceY()
+          .y((d) => d.y)
+          .strength(0.05)
+      );
+
+    // 更新節點位置
+    simulation.on('tick', () => {
+      node.attr('transform', (d) => `translate(${d.x},${d.y})`);
+    });
+
+    // 添加拖拽行為
+    node.call(
+      d3
+        .drag()
+        .on('start', (event, d) => {
+          if (!event.active) simulation.alphaTarget(0.3).restart();
+          d.fx = d.x;
+          d.fy = d.y;
+        })
+        .on('drag', (event, d) => {
+          d.fx = event.x;
+          d.fy = event.y;
+        })
+        .on('end', (event, d) => {
+          if (!event.active) simulation.alphaTarget(0);
+          d.fx = null;
+          d.fy = null;
+        })
+    );
+
+    // 互動區域
+    node
+      .append('circle')
+      .attr('r', (d) => d.r)
+      .attr('fill', 'transparent')
+      .attr('class', 'interaction-area')
+      .style('cursor', 'pointer')
+      .on('mouseover', function (event, d) {
+        if (window.innerWidth > 768) {
+          showTooltip(event, d);
+        }
+      })
+      .on('mouseout', function () {
+        if (window.innerWidth > 768) {
+          hideTooltip();
+        }
+      })
+      .on('click', function (event, d) {
+        event.preventDefault();
+        showTooltip(event, d);
+        setTimeout(hideTooltip, 3000);
+      });
 
     const showTooltip = (event, d) => {
       // 找出該隊伍的所有成員並排序
@@ -227,28 +301,10 @@ const TeamPompomBubbleChart = ({ data, individualData }) => {
       d3.select('#tooltip').style('display', 'none');
     };
 
-    // 更新事件處理
-    node
-      .append('circle')
-      .attr('r', (d) => d.r)
-      .attr('fill', 'transparent')
-      .attr('class', 'interaction-area')
-      .style('cursor', 'pointer')
-      .on('mouseover', function (event, d) {
-        if (window.innerWidth > 768) {
-          showTooltip(event, d);
-        }
-      })
-      .on('mouseout', function () {
-        if (window.innerWidth > 768) {
-          hideTooltip();
-        }
-      })
-      .on('click', function (event, d) {
-        event.preventDefault();
-        showTooltip(event, d);
-        setTimeout(hideTooltip, 3000);
-      });
+    // 清理函數
+    return () => {
+      simulation.stop();
+    };
   }, [data, individualData]);
 
   return (

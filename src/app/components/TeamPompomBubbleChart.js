@@ -225,6 +225,15 @@ const TeamPompomBubbleChart = ({ data, individualData }) => {
           if (!event.active) simulation.alphaTarget(0.3).restart();
           d.fx = d.x;
           d.fy = d.y;
+          
+          // 追蹤拖曳開始事件
+          if (typeof window.gtag !== 'undefined') {
+            window.gtag('event', 'teampompom_drag_start', {
+              'event_category': 'interaction',
+              'event_label': d.data.id,
+              'value': d.value
+            });
+          }
         })
         .on('drag', (event, d) => {
           // 限制拖拽范围
@@ -235,6 +244,15 @@ const TeamPompomBubbleChart = ({ data, individualData }) => {
           if (!event.active) simulation.alphaTarget(0);
           d.fx = null;
           d.fy = null;
+          
+          // 追蹤拖曳結束事件
+          if (typeof window.gtag !== 'undefined') {
+            window.gtag('event', 'teampompom_drag_end', {
+              'event_category': 'interaction',
+              'event_label': d.data.id,
+              'value': d.value
+            });
+          }
         })
     );
 
@@ -259,6 +277,15 @@ const TeamPompomBubbleChart = ({ data, individualData }) => {
         event.preventDefault();
         showTooltip(event, d);
         setTimeout(hideTooltip, 3000);
+        
+        // 追蹤點擊事件
+        if (typeof window.gtag !== 'undefined') {
+          window.gtag('event', 'teampompom_click', {
+            'event_category': 'interaction',
+            'event_label': d.data.id,
+            'value': d.value
+          });
+        }
       });
 
     const showTooltip = (event, d) => {

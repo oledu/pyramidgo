@@ -75,14 +75,14 @@ const ClimbingDotChart = ({ data, period }) => {
     const dateRange = getDateRange(period);
     const x = d3.scalePoint().domain(dateRange).range([0, width]).padding(0.5);
 
-    // 修改顏色函數，使用深紅到淺紅的漸變1
+    // 修改顏色函數，使用淺紅到深紅的漸變
     const getColor = (value) => {
-      if (value === 0) return '#1a1a2e'; // 深藍黑色背景
-      if (value > 0 && value <= 5) return '#800000'; // 深紅色 - 較少
-      if (value > 5 && value <= 10) return '#b30000'; // 中深紅色 - 中等
-      if (value > 10 && value <= 15) return '#e60000'; // 中紅色 - 較多
-      if (value > 15) return '#ff6666'; // 淺紅色 - 最多
-      return '#1a1a2e'; // 默認
+      if (value === 0) return '#1a1a2e';     // 深藍黑色背景 - 沒有完成記錄
+      if (value > 0 && value <= 5) return '#ff9999';   // 最淺紅色 - 1-5次
+      if (value > 5 && value <= 10) return '#ff4d4d';  // 淺紅色 - 6-10次
+      if (value > 10 && value <= 15) return '#cc0000'; // 深紅色 - 11-15次
+      if (value > 15) return '#800000';       // 最深紅色 - 超過15次
+      return '#1a1a2e';                       // 默認顏色
     };
 
     let yPosition = 0;

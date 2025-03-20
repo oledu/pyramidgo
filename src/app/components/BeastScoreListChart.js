@@ -267,7 +267,19 @@ const BeastScoreListChart = ({ data }) => {
     
     rows.on('click', function(event, d) {
       console.log('Row clicked:', d);
-      // 點擊效果可以在這裡添加
+      
+      // 發送 Google Analytics 事件
+      if (typeof window !== 'undefined' && window.gtag) {
+        window.gtag('event', 'beast_score_item_click', {
+          'event_category': 'beast_mode',
+          'event_label': d.CLMBR_NM,
+          'value': d.TOTAL_SCORE_BLD || 0,
+          'position': filteredData.indexOf(d) + 1
+        });
+        console.log('GA Event sent:', 'beast_score_item_click', d.CLMBR_NM);
+      } else {
+        console.log('Google Analytics not available');
+      }
     });
   };
 

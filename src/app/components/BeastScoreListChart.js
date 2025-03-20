@@ -1,10 +1,11 @@
 'use client';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 
 const BeastScoreListChart = ({ data }) => {
   const containerRef = useRef(null);
   const svgRef = useRef(null);
+  const [activeIndex, setActiveIndex] = useState(null);
 
   // 創建繪製圖表的函數
   const drawChart = () => {
@@ -22,7 +23,7 @@ const BeastScoreListChart = ({ data }) => {
     const width = containerWidth - margin.left - margin.right;
 
     // 設定每個項目的高度和間距
-    const itemHeight = 40; // 增加高度以容納特效
+    const itemHeight = 40;
     const height = filteredData.length * itemHeight;
 
     // 清除現有的SVG內容
@@ -43,11 +44,17 @@ const BeastScoreListChart = ({ data }) => {
       .enter()
       .append('g')
       .attr('class', 'row')
-      .attr('transform', (d, i) => `translate(0,${i * itemHeight})`);
+      .attr('transform', (d, i) => `translate(0,${i * itemHeight})`)
+      .style('cursor', 'pointer')
+      .style('user-select', 'none')
+      .style('-webkit-user-select', 'none')
+      .style('-moz-user-select', 'none')
+      .style('-ms-user-select', 'none');
 
     // 添加背景矩形
     rows
       .append('rect')
+      .attr('class', 'row-bg')
       .attr('x', 0)
       .attr('y', 0)
       .attr('width', width)
@@ -57,9 +64,7 @@ const BeastScoreListChart = ({ data }) => {
         if (i === 1) return 'url(#silver-gradient)';
         if (i === 2) return 'url(#bronze-gradient)';
         return 'rgba(0, 0, 0, 0.2)';
-      })
-      .attr('rx', 5)
-      .attr('ry', 5);
+      });
 
     // 定義漸變
     const defs = svg.append('defs');
@@ -76,12 +81,12 @@ const BeastScoreListChart = ({ data }) => {
     goldGradient
       .append('stop')
       .attr('offset', '0%')
-      .attr('stop-color', 'rgba(255, 215, 0, 0.3)');
+      .attr('stop-color', 'rgba(255, 215, 0, 0.2)');
 
     goldGradient
       .append('stop')
       .attr('offset', '100%')
-      .attr('stop-color', 'rgba(255, 215, 0, 0.1)');
+      .attr('stop-color', 'rgba(255, 215, 0, 0.2)');
 
     // 銀牌漸變
     const silverGradient = defs
@@ -95,12 +100,12 @@ const BeastScoreListChart = ({ data }) => {
     silverGradient
       .append('stop')
       .attr('offset', '0%')
-      .attr('stop-color', 'rgba(192, 192, 192, 0.3)');
+      .attr('stop-color', 'rgba(192, 192, 192, 0.2)');
 
     silverGradient
       .append('stop')
       .attr('offset', '100%')
-      .attr('stop-color', 'rgba(192, 192, 192, 0.1)');
+      .attr('stop-color', 'rgba(192, 192, 192, 0.2)');
 
     // 銅牌漸變
     const bronzeGradient = defs
@@ -114,12 +119,12 @@ const BeastScoreListChart = ({ data }) => {
     bronzeGradient
       .append('stop')
       .attr('offset', '0%')
-      .attr('stop-color', 'rgba(205, 127, 50, 0.3)');
+      .attr('stop-color', 'rgba(205, 127, 50, 0.2)');
 
     bronzeGradient
       .append('stop')
       .attr('offset', '100%')
-      .attr('stop-color', 'rgba(205, 127, 50, 0.1)');
+      .attr('stop-color', 'rgba(205, 127, 50, 0.2)');
 
     // 為前三名添加排名標記
     rows
@@ -137,6 +142,7 @@ const BeastScoreListChart = ({ data }) => {
     rows
       .filter((d, i) => i < 3)
       .append('text')
+      .attr('class', 'rank-text')
       .attr('x', 15)
       .attr('y', itemHeight / 2)
       .attr('text-anchor', 'middle')
@@ -144,11 +150,13 @@ const BeastScoreListChart = ({ data }) => {
       .attr('fill', '#000')
       .style('font-size', '12px')
       .style('font-weight', 'bold')
+      .style('pointer-events', 'none')
       .text((d, i) => i + 1);
 
     // 添加名稱文字
     rows
       .append('text')
+      .attr('class', 'name-text')
       .attr('x', (d, i) => (i < 3 ? 35 : 10))
       .attr('y', itemHeight / 2)
       .attr('dy', '0.35em')
@@ -160,11 +168,13 @@ const BeastScoreListChart = ({ data }) => {
       })
       .style('font-size', (d, i) => (i < 3 ? '18px' : '16px'))
       .style('font-weight', (d, i) => (i < 3 ? 'bold' : 'normal'))
+      .style('pointer-events', 'none')
       .text((d) => d.CLMBR_NM);
 
     // 添加分數文字
     rows
       .append('text')
+      .attr('class', 'score-text')
       .attr('x', width - 10)
       .attr('y', itemHeight / 2)
       .attr('dy', '0.35em')
@@ -177,6 +187,7 @@ const BeastScoreListChart = ({ data }) => {
       })
       .style('font-size', (d, i) => (i < 3 ? '20px' : '16px'))
       .style('font-weight', (d, i) => (i < 3 ? 'bold' : 'normal'))
+      .style('pointer-events', 'none')
       .text(
         (d) =>
           (d.TOTAL_SCORE_BLD % 1 === 0
@@ -193,6 +204,71 @@ const BeastScoreListChart = ({ data }) => {
       .attr('y2', itemHeight - 1)
       .attr('stroke', 'rgba(255, 255, 255, 0.1)')
       .attr('stroke-width', 1);
+    
+    // 添加滑鼠事件 - 簡化版本
+    rows.on('mouseenter', function(event, d) {
+      const row = d3.select(this);
+      row.selectAll('text')
+        .transition()
+        .duration(150)
+        .attr('fill', '#c08aff'); // 淡紫色，不那麼刺眼
+        
+      row.select('rect')
+        .transition()
+        .duration(150)
+        .attr('fill', 'rgba(150, 100, 255, 0.3)'); // 更淡的背景
+    });
+    
+    rows.on('mouseleave', function(event, d) {
+      const row = d3.select(this);
+      const i = filteredData.indexOf(d);
+      
+      // 恢復排名數字顏色 (只有前三名有)
+      if (i < 3) {
+        row.select('.rank-text')
+          .transition()
+          .duration(300)
+          .attr('fill', '#000');
+      }
+        
+      // 恢復名稱文字顏色
+      row.select('.name-text')
+        .transition()
+        .duration(300)
+        .attr('fill', () => {
+          if (i === 0) return '#FFD700';
+          if (i === 1) return '#C0C0C0';
+          if (i === 2) return '#CD7F32';
+          return 'white';
+        });
+        
+      // 恢復分數文字顏色
+      row.select('.score-text')
+        .transition()
+        .duration(300)
+        .attr('fill', () => {
+          if (i === 0) return '#ffd700';
+          if (i === 1) return '#c0c0c0';
+          if (i === 2) return '#cd7f32';
+          return 'rgba(255, 255, 255, 0.8)';
+        });
+        
+      // 恢復背景顏色
+      row.select('rect')
+        .transition()
+        .duration(300)
+        .attr('fill', () => {
+          if (i === 0) return 'url(#gold-gradient)';
+          if (i === 1) return 'url(#silver-gradient)';
+          if (i === 2) return 'url(#bronze-gradient)';
+          return 'rgba(0, 0, 0, 0.2)';
+        });
+    });
+    
+    rows.on('click', function(event, d) {
+      console.log('Row clicked:', d);
+      // 點擊效果可以在這裡添加
+    });
   };
 
   // 初始繪製

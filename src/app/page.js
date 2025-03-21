@@ -5,6 +5,7 @@ import LogoImg from './components/LogoImg';
 import MarqueeText from './components/MarqueeText';
 import DataCharts from './components/DataCharts';
 import { fetchData } from './services/api';
+import StructuredData from './components/StructuredData';
 
 // 動態導入 Background3D 組件，並禁用 SSR
 const Background3D = dynamic(() => import('./components/Background3D'), {
@@ -35,16 +36,19 @@ export default function Home() {
   }, []);
 
   return (
-    <main className="min-h-screen">
-      <Background3D />
-      <MarqueeText data={data} />
-      <LogoImg />
-      <DataCharts
-        data={data}
-        loading={loading}
-        error={error}
-        onPeriodChange={handlePeriodChange}
-      />
-    </main>
+    <>
+      <StructuredData />
+      <main className="min-h-screen">
+        <Background3D />
+        <MarqueeText data={data} />
+        <LogoImg />
+        <DataCharts
+          data={data}
+          loading={loading}
+          error={error}
+          onPeriodChange={handlePeriodChange}
+        />
+      </main>
+    </>
   );
 }

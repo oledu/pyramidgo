@@ -437,9 +437,6 @@ const BeastScoreListChart = ({ data }) => {
 
   return (
     <div ref={containerRef} className="w-full h-full">
-      <h2 className="text-xl font-bold text-white mb-4">
-        抱石猛獸爭霸積分英雄榜
-      </h2>
       <svg ref={svgRef} className="w-full h-full"></svg>
     </div>
   );

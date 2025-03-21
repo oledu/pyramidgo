@@ -6,6 +6,8 @@ const BeastScoreListChart = ({ data }) => {
   const containerRef = useRef(null);
   const svgRef = useRef(null);
   const [activeIndex, setActiveIndex] = useState(null);
+  const [isVisible, setIsVisible] = useState(false);
+  const [animationPlayed, setAnimationPlayed] = useState(false); // 追蹤動畫是否已播放
 
   // 創建繪製圖表的函數
   const drawChart = () => {
@@ -37,6 +39,85 @@ const BeastScoreListChart = ({ data }) => {
       .append('g')
       .attr('transform', `translate(${margin.left},${margin.top})`);
 
+    // 定義漸變
+    const defs = svg.append('defs');
+
+    // 金牌漸變
+    const goldGradient = defs
+      .append('linearGradient')
+      .attr('id', 'gold-gradient')
+      .attr('x1', '0%')
+      .attr('y1', '0%')
+      .attr('x2', '100%')
+      .attr('y2', '0%');
+
+    goldGradient
+      .append('stop')
+      .attr('offset', '0%')
+      .attr('stop-color', 'rgba(255, 215, 0, 0.3)');
+
+    goldGradient
+      .append('stop')
+      .attr('offset', '100%')
+      .attr('stop-color', 'rgba(255, 215, 0, 0.1)');
+
+    // 銀牌漸變
+    const silverGradient = defs
+      .append('linearGradient')
+      .attr('id', 'silver-gradient')
+      .attr('x1', '0%')
+      .attr('y1', '0%')
+      .attr('x2', '100%')
+      .attr('y2', '0%');
+
+    silverGradient
+      .append('stop')
+      .attr('offset', '0%')
+      .attr('stop-color', 'rgba(192, 192, 192, 0.3)');
+
+    silverGradient
+      .append('stop')
+      .attr('offset', '100%')
+      .attr('stop-color', 'rgba(192, 192, 192, 0.1)');
+
+    // 銅牌漸變
+    const bronzeGradient = defs
+      .append('linearGradient')
+      .attr('id', 'bronze-gradient')
+      .attr('x1', '0%')
+      .attr('y1', '0%')
+      .attr('x2', '100%')
+      .attr('y2', '0%');
+
+    bronzeGradient
+      .append('stop')
+      .attr('offset', '0%')
+      .attr('stop-color', 'rgba(205, 127, 50, 0.3)');
+
+    bronzeGradient
+      .append('stop')
+      .attr('offset', '100%')
+      .attr('stop-color', 'rgba(205, 127, 50, 0.1)');
+
+    // 添加 NPC 綠色漸變
+    const npcGradient = defs
+      .append('linearGradient')
+      .attr('id', 'npc-gradient')
+      .attr('x1', '0%')
+      .attr('y1', '0%')
+      .attr('x2', '100%')
+      .attr('y2', '0%');
+
+    npcGradient
+      .append('stop')
+      .attr('offset', '0%')
+      .attr('stop-color', 'rgba(0, 128, 0, 0.3)'); // 深綠色
+
+    npcGradient
+      .append('stop')
+      .attr('offset', '100%')
+      .attr('stop-color', 'rgba(144, 238, 144, 0.3)'); // 淺綠色
+
     // 為前三名添加特殊背景
     const rows = svg
       .selectAll('.row')
@@ -44,12 +125,14 @@ const BeastScoreListChart = ({ data }) => {
       .enter()
       .append('g')
       .attr('class', 'row')
-      .attr('transform', (d, i) => `translate(0,${i * itemHeight})`)
-      .style('cursor', 'pointer')
-      .style('user-select', 'none')
-      .style('-webkit-user-select', 'none')
-      .style('-moz-user-select', 'none')
-      .style('-ms-user-select', 'none');
+      .attr('transform', (d, i) => {
+        // 如果是 NPC 且元素可見且動畫尚未播放，初始位置在頂部更遠處（完全不可見）
+        if (d.IS_NPC === 'Y' && isVisible && !animationPlayed) {
+          return `translate(0, -${itemHeight * 2})`; // 將位置設置得更高，確保完全不可見
+        }
+        // 其他項目正常位置
+        return `translate(0, ${i * itemHeight})`;
+      });
 
     // 添加背景矩形
     rows
@@ -73,85 +156,6 @@ const BeastScoreListChart = ({ data }) => {
       .attr('rx', 8)
       .attr('ry', 8);
 
-    // 定義漸變
-    const defs = svg.append('defs');
-
-    // 金牌漸變
-    const goldGradient = defs
-      .append('linearGradient')
-      .attr('id', 'gold-gradient')
-      .attr('x1', '0%')
-      .attr('y1', '0%')
-      .attr('x2', '100%')
-      .attr('y2', '0%');
-
-    goldGradient
-      .append('stop')
-      .attr('offset', '0%')
-      .attr('stop-color', 'rgba(255, 215, 0, 0.2)');
-
-    goldGradient
-      .append('stop')
-      .attr('offset', '100%')
-      .attr('stop-color', 'rgba(255, 215, 0, 0.2)');
-
-    // 銀牌漸變
-    const silverGradient = defs
-      .append('linearGradient')
-      .attr('id', 'silver-gradient')
-      .attr('x1', '0%')
-      .attr('y1', '0%')
-      .attr('x2', '100%')
-      .attr('y2', '0%');
-
-    silverGradient
-      .append('stop')
-      .attr('offset', '0%')
-      .attr('stop-color', 'rgba(192, 192, 192, 0.2)');
-
-    silverGradient
-      .append('stop')
-      .attr('offset', '100%')
-      .attr('stop-color', 'rgba(192, 192, 192, 0.2)');
-
-    // 銅牌漸變
-    const bronzeGradient = defs
-      .append('linearGradient')
-      .attr('id', 'bronze-gradient')
-      .attr('x1', '0%')
-      .attr('y1', '0%')
-      .attr('x2', '100%')
-      .attr('y2', '0%');
-
-    bronzeGradient
-      .append('stop')
-      .attr('offset', '0%')
-      .attr('stop-color', 'rgba(205, 127, 50, 0.2)');
-
-    bronzeGradient
-      .append('stop')
-      .attr('offset', '100%')
-      .attr('stop-color', 'rgba(205, 127, 50, 0.2)');
-
-    // 添加 NPC 綠色漸變
-    const npcGradient = defs
-      .append('linearGradient')
-      .attr('id', 'npc-gradient')
-      .attr('x1', '0%')
-      .attr('y1', '0%')
-      .attr('x2', '100%')
-      .attr('y2', '0%');
-
-    npcGradient
-      .append('stop')
-      .attr('offset', '0%')
-      .attr('stop-color', 'rgba(0, 128, 0, 0.3)'); // 深綠色
-
-    npcGradient
-      .append('stop')
-      .attr('offset', '100%')
-      .attr('stop-color', 'rgba(144, 238, 144, 0.3)'); // 淺綠色
-
     // 為前三名添加排名標記
     rows
       .filter((d, i) => i < 3)
@@ -168,7 +172,6 @@ const BeastScoreListChart = ({ data }) => {
     rows
       .filter((d, i) => i < 3)
       .append('text')
-      .attr('class', 'rank-text')
       .attr('x', 15)
       .attr('y', itemHeight / 2)
       .attr('text-anchor', 'middle')
@@ -176,7 +179,6 @@ const BeastScoreListChart = ({ data }) => {
       .attr('fill', '#000')
       .style('font-size', '12px')
       .style('font-weight', 'bold')
-      .style('pointer-events', 'none')
       .text((d, i) => i + 1);
 
     // 添加名稱文字
@@ -241,7 +243,45 @@ const BeastScoreListChart = ({ data }) => {
       .attr('stroke', 'rgba(255, 255, 255, 0.1)')
       .attr('stroke-width', 1);
 
-    // 添加滑鼠事件 - 完整修復版本
+    // 為 NPC 項目添加動畫，只有在元素可見且動畫尚未播放時才執行
+    if (isVisible && !animationPlayed) {
+      // 設置延遲 0.5 秒後開始動畫
+      setTimeout(() => {
+        rows
+          .filter((d) => d.IS_NPC === 'Y')
+          .transition()
+          .duration(3000) // 動畫持續時間 3 秒
+          .ease(d3.easeBounce) // 彈跳效果
+          .attr('transform', (d, i) => {
+            // 找到 NPC 在排序後的位置
+            const index = filteredData.indexOf(d);
+            return `translate(0, ${index * itemHeight})`;
+          })
+          .on('end', function () {
+            // 動畫結束後添加閃爍效果
+            d3.select(this)
+              .select('rect')
+              .transition()
+              .duration(500)
+              .attr('fill', 'rgba(0, 255, 0, 0.5)')
+              .transition()
+              .duration(500)
+              .attr('fill', 'url(#npc-gradient)')
+              .transition()
+              .duration(500)
+              .attr('fill', 'rgba(0, 255, 0, 0.5)')
+              .transition()
+              .duration(500)
+              .attr('fill', 'url(#npc-gradient)')
+              .on('end', () => {
+                // 動畫完全結束後，設置動畫已播放標誌
+                setAnimationPlayed(true);
+              });
+          });
+      }, 500); // 延遲 0.5 秒
+    }
+
+    // 添加滑鼠事件
     rows.on('mouseenter', function (event, d) {
       const row = d3.select(this);
       row.selectAll('text').transition().duration(150).attr('fill', '#c08aff'); // 淡紫色，不那麼刺眼
@@ -337,7 +377,36 @@ const BeastScoreListChart = ({ data }) => {
   // 初始繪製
   useEffect(() => {
     drawChart();
-  }, [data]);
+  }, [data, isVisible, animationPlayed]);
+
+  // 設置 Intersection Observer 來檢測元素是否可見
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        // 當元素進入視口時，設置 isVisible 為 true
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          // 可選：一旦元素可見，就不再觀察
+          observer.disconnect();
+        }
+      },
+      {
+        root: null, // 使用視口作為根
+        rootMargin: '0px', // 無邊距
+        threshold: 0.1, // 當 10% 的元素可見時觸發
+      }
+    );
+
+    if (containerRef.current) {
+      observer.observe(containerRef.current);
+    }
+
+    return () => {
+      if (containerRef.current) {
+        observer.unobserve(containerRef.current);
+      }
+    };
+  }, []);
 
   // 監聽視窗大小變化
   useEffect(() => {
@@ -350,10 +419,13 @@ const BeastScoreListChart = ({ data }) => {
     return () => {
       window.removeEventListener('resize', handleResize);
     };
-  }, [data]);
+  }, [data, isVisible, animationPlayed]);
 
   return (
     <div ref={containerRef} className="w-full h-full">
+      <h2 className="text-xl font-bold text-white mb-4">
+        抱石猛獸爭霸積分英雄榜
+      </h2>
       <svg ref={svgRef} className="w-full h-full"></svg>
     </div>
   );

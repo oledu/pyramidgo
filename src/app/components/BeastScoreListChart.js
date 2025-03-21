@@ -5,7 +5,6 @@ import * as d3 from 'd3';
 const BeastScoreListChart = ({ data }) => {
   const containerRef = useRef(null);
   const svgRef = useRef(null);
-  const [activeIndex, setActiveIndex] = useState(null);
   const [isVisible, setIsVisible] = useState(false);
   const [animationPlayed, setAnimationPlayed] = useState(false); // 追蹤動畫是否已播放
 
@@ -17,6 +16,9 @@ const BeastScoreListChart = ({ data }) => {
     const filteredData = data
       .filter((d) => d.BEAST_MODE === 'Y')
       .sort((a, b) => (b.TOTAL_SCORE_BLD || 0) - (a.TOTAL_SCORE_BLD || 0));
+
+    // 獲取非 NPC 的數據，用於確定前三名
+    const nonNpcData = filteredData.filter((d) => d.IS_NPC !== 'Y');
 
     // 獲取容器寬度
     const container = containerRef.current;
@@ -128,7 +130,7 @@ const BeastScoreListChart = ({ data }) => {
       .attr('transform', (d, i) => {
         // 如果是 NPC 且元素可見且動畫尚未播放，初始位置在頂部更遠處（完全不可見）
         if (d.IS_NPC === 'Y' && isVisible && !animationPlayed) {
-          return `translate(0, -${itemHeight * 2})`; // 將位置設置得更高，確保完全不可見
+          return `translate(0, -${itemHeight * 2})`;
         }
         // 其他項目正常位置
         return `translate(0, ${i * itemHeight})`;
@@ -147,30 +149,38 @@ const BeastScoreListChart = ({ data }) => {
           return 'url(#npc-gradient)'; // NPC 使用綠色漸層
         }
 
-        // 原有的前三名漸層
-        if (i === 0) return 'url(#gold-gradient)';
-        if (i === 1) return 'url(#silver-gradient)';
-        if (i === 2) return 'url(#bronze-gradient)';
+        // 檢查是否為非 NPC 的前三名
+        const nonNpcIndex = nonNpcData.indexOf(d);
+        if (nonNpcIndex === 0) return 'url(#gold-gradient)';
+        if (nonNpcIndex === 1) return 'url(#silver-gradient)';
+        if (nonNpcIndex === 2) return 'url(#bronze-gradient)';
         return 'rgba(0, 0, 0, 0.2)';
       })
       .attr('rx', 8)
       .attr('ry', 8);
 
-    // 為前三名添加排名標記
+    // 為非 NPC 的前三名添加排名標記
     rows
-      .filter((d, i) => i < 3)
+      .filter((d) => {
+        const nonNpcIndex = nonNpcData.indexOf(d);
+        return nonNpcIndex >= 0 && nonNpcIndex < 3;
+      })
       .append('circle')
       .attr('cx', 15)
       .attr('cy', itemHeight / 2)
       .attr('r', 12)
-      .attr('fill', (d, i) => {
-        if (i === 0) return '#ffd700'; // 金
-        if (i === 1) return '#c0c0c0'; // 銀
+      .attr('fill', (d) => {
+        const nonNpcIndex = nonNpcData.indexOf(d);
+        if (nonNpcIndex === 0) return '#ffd700'; // 金
+        if (nonNpcIndex === 1) return '#c0c0c0'; // 銀
         return '#cd7f32'; // 銅
       });
 
     rows
-      .filter((d, i) => i < 3)
+      .filter((d) => {
+        const nonNpcIndex = nonNpcData.indexOf(d);
+        return nonNpcIndex >= 0 && nonNpcIndex < 3;
+      })
       .append('text')
       .attr('x', 15)
       .attr('y', itemHeight / 2)
@@ -179,28 +189,40 @@ const BeastScoreListChart = ({ data }) => {
       .attr('fill', '#000')
       .style('font-size', '12px')
       .style('font-weight', 'bold')
-      .text((d, i) => i + 1);
+      .text((d) => {
+        const nonNpcIndex = nonNpcData.indexOf(d);
+        return nonNpcIndex + 1;
+      });
 
     // 添加名稱文字
     rows
       .append('text')
-      .attr('x', (d, i) => (i < 3 ? 35 : 10))
+      .attr('x', (d) => {
+        const nonNpcIndex = nonNpcData.indexOf(d);
+        return nonNpcIndex >= 0 && nonNpcIndex < 3 ? 35 : 10;
+      })
       .attr('y', itemHeight / 2)
       .attr('dy', '0.35em')
-      .attr('fill', (d, i) => {
+      .attr('fill', (d) => {
         if (d.IS_NPC === 'Y') return '#00cc00'; // NPC 名稱使用綠色
-        if (i === 0) return '#FFD700'; // 金色
-        if (i === 1) return '#C0C0C0'; // 銀色
-        if (i === 2) return '#CD7F32'; // 銅色
+
+        const nonNpcIndex = nonNpcData.indexOf(d);
+        if (nonNpcIndex === 0) return '#FFD700'; // 金色
+        if (nonNpcIndex === 1) return '#C0C0C0'; // 銀色
+        if (nonNpcIndex === 2) return '#CD7F32'; // 銅色
         return 'white';
       })
-      .style('font-size', (d, i) => {
-        if (d.IS_NPC === 'Y' || i < 3) return '18px'; // NPC 和前三名使用大字體
-        return '16px';
+      .style('font-size', (d) => {
+        if (d.IS_NPC === 'Y') return '18px'; // NPC 使用大字體
+
+        const nonNpcIndex = nonNpcData.indexOf(d);
+        return nonNpcIndex >= 0 && nonNpcIndex < 3 ? '18px' : '16px';
       })
-      .style('font-weight', (d, i) => {
-        if (d.IS_NPC === 'Y' || i < 3) return 'bold'; // NPC 和前三名使用粗體
-        return 'normal';
+      .style('font-weight', (d) => {
+        if (d.IS_NPC === 'Y') return 'bold'; // NPC 使用粗體
+
+        const nonNpcIndex = nonNpcData.indexOf(d);
+        return nonNpcIndex >= 0 && nonNpcIndex < 3 ? 'bold' : 'normal';
       })
       .text((d) => d.CLMBR_NM);
 
@@ -211,20 +233,26 @@ const BeastScoreListChart = ({ data }) => {
       .attr('y', itemHeight / 2)
       .attr('dy', '0.35em')
       .attr('text-anchor', 'end')
-      .attr('fill', (d, i) => {
+      .attr('fill', (d) => {
         if (d.IS_NPC === 'Y') return '#00cc00'; // NPC 分數使用綠色
-        if (i === 0) return '#ffd700'; // 金
-        if (i === 1) return '#c0c0c0'; // 銀
-        if (i === 2) return '#cd7f32'; // 銅
+
+        const nonNpcIndex = nonNpcData.indexOf(d);
+        if (nonNpcIndex === 0) return '#ffd700'; // 金
+        if (nonNpcIndex === 1) return '#c0c0c0'; // 銀
+        if (nonNpcIndex === 2) return '#cd7f32'; // 銅
         return 'rgba(255, 255, 255, 0.8)'; // 其他人使用半透明白色
       })
-      .style('font-size', (d, i) => {
-        if (d.IS_NPC === 'Y' || i < 3) return '20px'; // NPC 和前三名使用大字體
-        return '16px';
+      .style('font-size', (d) => {
+        if (d.IS_NPC === 'Y') return '20px'; // NPC 使用大字體
+
+        const nonNpcIndex = nonNpcData.indexOf(d);
+        return nonNpcIndex >= 0 && nonNpcIndex < 3 ? '20px' : '16px';
       })
-      .style('font-weight', (d, i) => {
-        if (d.IS_NPC === 'Y' || i < 3) return 'bold'; // NPC 和前三名使用粗體
-        return 'normal';
+      .style('font-weight', (d) => {
+        if (d.IS_NPC === 'Y') return 'bold'; // NPC 使用粗體
+
+        const nonNpcIndex = nonNpcData.indexOf(d);
+        return nonNpcIndex >= 0 && nonNpcIndex < 3 ? 'bold' : 'normal';
       })
       .text(
         (d) =>
@@ -296,6 +324,7 @@ const BeastScoreListChart = ({ data }) => {
     rows.on('mouseleave', function (event, d) {
       const row = d3.select(this);
       const i = filteredData.indexOf(d);
+      const nonNpcIndex = nonNpcData.indexOf(d);
 
       // 獲取所有文字元素
       const texts = row.selectAll('text');
@@ -303,16 +332,18 @@ const BeastScoreListChart = ({ data }) => {
       // 第一個文字元素通常是名稱
       texts
         .filter(function (d, textIndex) {
-          // 如果是前三名，第一個文字是排名數字，第二個是名稱
-          return i < 3 ? textIndex === 1 : textIndex === 0;
+          // 如果是非 NPC 的前三名，第一個文字是排名數字，第二個是名稱
+          return nonNpcIndex >= 0 && nonNpcIndex < 3
+            ? textIndex === 1
+            : textIndex === 0;
         })
         .transition()
         .duration(300)
         .attr('fill', function () {
           if (d.IS_NPC === 'Y') return '#00cc00'; // NPC 名稱使用綠色
-          if (i === 0) return '#FFD700'; // 金色
-          if (i === 1) return '#C0C0C0'; // 銀色
-          if (i === 2) return '#CD7F32'; // 銅色
+          if (nonNpcIndex === 0) return '#FFD700'; // 金色
+          if (nonNpcIndex === 1) return '#C0C0C0'; // 銀色
+          if (nonNpcIndex === 2) return '#CD7F32'; // 銅色
           return 'white';
         });
 
@@ -325,14 +356,14 @@ const BeastScoreListChart = ({ data }) => {
         .duration(300)
         .attr('fill', function () {
           if (d.IS_NPC === 'Y') return '#00cc00'; // NPC 分數使用綠色
-          if (i === 0) return '#ffd700'; // 金
-          if (i === 1) return '#c0c0c0'; // 銀
-          if (i === 2) return '#cd7f32'; // 銅
+          if (nonNpcIndex === 0) return '#ffd700'; // 金
+          if (nonNpcIndex === 1) return '#c0c0c0'; // 銀
+          if (nonNpcIndex === 2) return '#cd7f32'; // 銅
           return 'rgba(255, 255, 255, 0.8)'; // 其他人使用半透明白色
         });
 
-      // 如果是前三名，第一個文字是排名數字
-      if (i < 3) {
+      // 如果是非 NPC 的前三名，第一個文字是排名數字
+      if (nonNpcIndex >= 0 && nonNpcIndex < 3) {
         texts
           .filter(function (d, textIndex) {
             return textIndex === 0;
@@ -349,35 +380,18 @@ const BeastScoreListChart = ({ data }) => {
         .duration(300)
         .attr('fill', function () {
           if (d.IS_NPC === 'Y') return 'url(#npc-gradient)'; // NPC 使用綠色漸層
-          if (i === 0) return 'url(#gold-gradient)';
-          if (i === 1) return 'url(#silver-gradient)';
-          if (i === 2) return 'url(#bronze-gradient)';
+          if (nonNpcIndex === 0) return 'url(#gold-gradient)';
+          if (nonNpcIndex === 1) return 'url(#silver-gradient)';
+          if (nonNpcIndex === 2) return 'url(#bronze-gradient)';
           return 'rgba(0, 0, 0, 0.2)';
         });
-    });
-
-    rows.on('click', function (event, d) {
-      console.log('Row clicked:', d);
-
-      // 發送 Google Analytics 事件
-      if (typeof window !== 'undefined' && window.gtag) {
-        window.gtag('event', 'beast_score_item_click', {
-          event_category: 'beast_mode',
-          event_label: d.CLMBR_NM,
-          value: d.TOTAL_SCORE_BLD || 0,
-          position: filteredData.indexOf(d) + 1,
-        });
-        console.log('GA Event sent:', 'beast_score_item_click', d.CLMBR_NM);
-      } else {
-        console.log('Google Analytics not available');
-      }
     });
   };
 
   // 初始繪製
   useEffect(() => {
     drawChart();
-  }, [data, isVisible, animationPlayed]);
+  }, [data, isVisible, animationPlayed]); // 添加 animationPlayed 作為依賴
 
   // 設置 Intersection Observer 來檢測元素是否可見
   useEffect(() => {
@@ -419,7 +433,7 @@ const BeastScoreListChart = ({ data }) => {
     return () => {
       window.removeEventListener('resize', handleResize);
     };
-  }, [data, isVisible, animationPlayed]);
+  }, [data, isVisible, animationPlayed]); // 添加 animationPlayed 作為依賴
 
   return (
     <div ref={containerRef} className="w-full h-full">

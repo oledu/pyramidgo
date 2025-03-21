@@ -54,17 +54,24 @@ const BeastScoreListChart = ({ data }) => {
     // 添加背景矩形
     rows
       .append('rect')
-      .attr('class', 'row-bg')
       .attr('x', 0)
       .attr('y', 0)
       .attr('width', width)
       .attr('height', itemHeight - 1)
       .attr('fill', (d, i) => {
+        // 檢查是否為 NPC
+        if (d.IS_NPC === 'Y') {
+          return 'url(#npc-gradient)'; // NPC 使用綠色漸層
+        }
+
+        // 原有的前三名漸層
         if (i === 0) return 'url(#gold-gradient)';
         if (i === 1) return 'url(#silver-gradient)';
         if (i === 2) return 'url(#bronze-gradient)';
         return 'rgba(0, 0, 0, 0.2)';
-      });
+      })
+      .attr('rx', 8)
+      .attr('ry', 8);
 
     // 定義漸變
     const defs = svg.append('defs');
@@ -126,6 +133,25 @@ const BeastScoreListChart = ({ data }) => {
       .attr('offset', '100%')
       .attr('stop-color', 'rgba(205, 127, 50, 0.2)');
 
+    // 添加 NPC 綠色漸變
+    const npcGradient = defs
+      .append('linearGradient')
+      .attr('id', 'npc-gradient')
+      .attr('x1', '0%')
+      .attr('y1', '0%')
+      .attr('x2', '100%')
+      .attr('y2', '0%');
+
+    npcGradient
+      .append('stop')
+      .attr('offset', '0%')
+      .attr('stop-color', 'rgba(0, 128, 0, 0.3)'); // 深綠色
+
+    npcGradient
+      .append('stop')
+      .attr('offset', '100%')
+      .attr('stop-color', 'rgba(144, 238, 144, 0.3)'); // 淺綠色
+
     // 為前三名添加排名標記
     rows
       .filter((d, i) => i < 3)
@@ -156,38 +182,48 @@ const BeastScoreListChart = ({ data }) => {
     // 添加名稱文字
     rows
       .append('text')
-      .attr('class', 'name-text')
       .attr('x', (d, i) => (i < 3 ? 35 : 10))
       .attr('y', itemHeight / 2)
       .attr('dy', '0.35em')
       .attr('fill', (d, i) => {
+        if (d.IS_NPC === 'Y') return '#00cc00'; // NPC 名稱使用綠色
         if (i === 0) return '#FFD700'; // 金色
         if (i === 1) return '#C0C0C0'; // 銀色
         if (i === 2) return '#CD7F32'; // 銅色
-        return 'white'; // 其他維持白色
+        return 'white';
       })
-      .style('font-size', (d, i) => (i < 3 ? '18px' : '16px'))
-      .style('font-weight', (d, i) => (i < 3 ? 'bold' : 'normal'))
-      .style('pointer-events', 'none')
+      .style('font-size', (d, i) => {
+        if (d.IS_NPC === 'Y' || i < 3) return '18px'; // NPC 和前三名使用大字體
+        return '16px';
+      })
+      .style('font-weight', (d, i) => {
+        if (d.IS_NPC === 'Y' || i < 3) return 'bold'; // NPC 和前三名使用粗體
+        return 'normal';
+      })
       .text((d) => d.CLMBR_NM);
 
     // 添加分數文字
     rows
       .append('text')
-      .attr('class', 'score-text')
       .attr('x', width - 10)
       .attr('y', itemHeight / 2)
       .attr('dy', '0.35em')
       .attr('text-anchor', 'end')
       .attr('fill', (d, i) => {
+        if (d.IS_NPC === 'Y') return '#00cc00'; // NPC 分數使用綠色
         if (i === 0) return '#ffd700'; // 金
         if (i === 1) return '#c0c0c0'; // 銀
         if (i === 2) return '#cd7f32'; // 銅
         return 'rgba(255, 255, 255, 0.8)'; // 其他人使用半透明白色
       })
-      .style('font-size', (d, i) => (i < 3 ? '20px' : '16px'))
-      .style('font-weight', (d, i) => (i < 3 ? 'bold' : 'normal'))
-      .style('pointer-events', 'none')
+      .style('font-size', (d, i) => {
+        if (d.IS_NPC === 'Y' || i < 3) return '20px'; // NPC 和前三名使用大字體
+        return '16px';
+      })
+      .style('font-weight', (d, i) => {
+        if (d.IS_NPC === 'Y' || i < 3) return 'bold'; // NPC 和前三名使用粗體
+        return 'normal';
+      })
       .text(
         (d) =>
           (d.TOTAL_SCORE_BLD % 1 === 0
@@ -204,77 +240,92 @@ const BeastScoreListChart = ({ data }) => {
       .attr('y2', itemHeight - 1)
       .attr('stroke', 'rgba(255, 255, 255, 0.1)')
       .attr('stroke-width', 1);
-    
-    // 添加滑鼠事件 - 簡化版本
-    rows.on('mouseenter', function(event, d) {
+
+    // 添加滑鼠事件 - 完整修復版本
+    rows.on('mouseenter', function (event, d) {
       const row = d3.select(this);
-      row.selectAll('text')
-        .transition()
-        .duration(150)
-        .attr('fill', '#c08aff'); // 淡紫色，不那麼刺眼
-        
-      row.select('rect')
+      row.selectAll('text').transition().duration(150).attr('fill', '#c08aff'); // 淡紫色，不那麼刺眼
+
+      row
+        .select('rect')
         .transition()
         .duration(150)
         .attr('fill', 'rgba(150, 100, 255, 0.3)'); // 更淡的背景
     });
-    
-    rows.on('mouseleave', function(event, d) {
+
+    rows.on('mouseleave', function (event, d) {
       const row = d3.select(this);
       const i = filteredData.indexOf(d);
-      
-      // 恢復排名數字顏色 (只有前三名有)
+
+      // 獲取所有文字元素
+      const texts = row.selectAll('text');
+
+      // 第一個文字元素通常是名稱
+      texts
+        .filter(function (d, textIndex) {
+          // 如果是前三名，第一個文字是排名數字，第二個是名稱
+          return i < 3 ? textIndex === 1 : textIndex === 0;
+        })
+        .transition()
+        .duration(300)
+        .attr('fill', function () {
+          if (d.IS_NPC === 'Y') return '#00cc00'; // NPC 名稱使用綠色
+          if (i === 0) return '#FFD700'; // 金色
+          if (i === 1) return '#C0C0C0'; // 銀色
+          if (i === 2) return '#CD7F32'; // 銅色
+          return 'white';
+        });
+
+      // 最後一個文字元素是分數
+      texts
+        .filter(function (d, textIndex) {
+          return textIndex === texts.size() - 1;
+        })
+        .transition()
+        .duration(300)
+        .attr('fill', function () {
+          if (d.IS_NPC === 'Y') return '#00cc00'; // NPC 分數使用綠色
+          if (i === 0) return '#ffd700'; // 金
+          if (i === 1) return '#c0c0c0'; // 銀
+          if (i === 2) return '#cd7f32'; // 銅
+          return 'rgba(255, 255, 255, 0.8)'; // 其他人使用半透明白色
+        });
+
+      // 如果是前三名，第一個文字是排名數字
       if (i < 3) {
-        row.select('.rank-text')
+        texts
+          .filter(function (d, textIndex) {
+            return textIndex === 0;
+          })
           .transition()
           .duration(300)
           .attr('fill', '#000');
       }
-        
-      // 恢復名稱文字顏色
-      row.select('.name-text')
-        .transition()
-        .duration(300)
-        .attr('fill', () => {
-          if (i === 0) return '#FFD700';
-          if (i === 1) return '#C0C0C0';
-          if (i === 2) return '#CD7F32';
-          return 'white';
-        });
-        
-      // 恢復分數文字顏色
-      row.select('.score-text')
-        .transition()
-        .duration(300)
-        .attr('fill', () => {
-          if (i === 0) return '#ffd700';
-          if (i === 1) return '#c0c0c0';
-          if (i === 2) return '#cd7f32';
-          return 'rgba(255, 255, 255, 0.8)';
-        });
-        
+
       // 恢復背景顏色
-      row.select('rect')
+      row
+        .select('rect')
         .transition()
         .duration(300)
-        .attr('fill', () => {
+        .attr('fill', function () {
+          if (d.IS_NPC === 'Y') return 'url(#npc-gradient)'; // NPC 使用綠色漸層
           if (i === 0) return 'url(#gold-gradient)';
           if (i === 1) return 'url(#silver-gradient)';
           if (i === 2) return 'url(#bronze-gradient)';
           return 'rgba(0, 0, 0, 0.2)';
         });
     });
-    
-    rows.on('click', function(event, d) {
+
+    rows.on('click', function (event, d) {
       console.log('Row clicked:', d);
-      
+
       // 發送 Google Analytics 事件
       if (typeof window !== 'undefined' && window.gtag) {
         window.gtag('event', 'beast_score_item_click', {
-          'event_category': 'beast_mode',
-          'event_label': d.CLMBR_NM,
-          'value': d.TOTAL_SCORE_BLD || 0,
-          'position': filteredData.indexOf(d) + 1
+          event_category: 'beast_mode',
+          event_label: d.CLMBR_NM,
+          value: d.TOTAL_SCORE_BLD || 0,
+          position: filteredData.indexOf(d) + 1,
         });
         console.log('GA Event sent:', 'beast_score_item_click', d.CLMBR_NM);
       } else {

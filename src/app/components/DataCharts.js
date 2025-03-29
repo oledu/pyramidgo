@@ -29,14 +29,18 @@ const DataCharts = ({ data, loading, error, onPeriodChange }) => {
     onPeriodChange(period);
   };
 
+  let { settings = [] } = data || {};
+
+  // console.log('settings', settings);
+
   let scores = calculateScores(data);
-  console.log('scores', scores);
+  // console.log('scores', scores);
 
   let pompom = calculatePompom(scores);
-  console.log('pompom', pompom);
+  // console.log('pompom', pompom);
 
   let pompomTeam = calculatePompomTeam(pompom);
-  console.log('pompomTeam', pompomTeam);
+  // console.log('pompomTeam', pompomTeam);
 
   // let teamPompom = pompom.
 
@@ -104,7 +108,7 @@ const DataCharts = ({ data, loading, error, onPeriodChange }) => {
                       minWidth: '350px',
                       width: '95%',
                       maxWidth: '1600px',
-                      backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                      backgroundColor: 'rgba(137, 8, 8, 0.2)',
                       borderRadius: '10px',
                     }}
                     className="flex flex-col p-1 md:p-5"
@@ -150,7 +154,10 @@ const DataCharts = ({ data, loading, error, onPeriodChange }) => {
                           <h2 className="text-white text-center text-xl font-bold mb-4">
                             抱石猛獸爭霸積分英雄榜
                           </h2>
-                          <BeastScoreListChart data={scores} />
+                          <BeastScoreListChart
+                            data={scores}
+                            settings={settings}
+                          />
                         </div>
                       </div>
 
@@ -253,7 +260,7 @@ const DataCharts = ({ data, loading, error, onPeriodChange }) => {
                   position: 'relative',
                 }}
               >
-                <BeastScoreListChart data={scores} />
+                <BeastScoreListChart data={scores} settings={settings} />
               </div>
             )}
             {activeTab === 'pompom' && (

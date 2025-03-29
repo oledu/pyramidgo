@@ -1,16 +1,22 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
+import loadingAnimation from '../animations/loading.json';
+import Lottie from 'lottie-react';
 
-const BeastScoreListChart = ({ data }) => {
+const BeastScoreListChart = ({ data, settings }) => {
   const containerRef = useRef(null);
   const svgRef = useRef(null);
   const [isVisible, setIsVisible] = useState(false);
   const [animationPlayed, setAnimationPlayed] = useState(false); // 追蹤動畫是否已播放
 
+  // 檢查是否需要遮罩
+  const isMasked = settings?.find((s) => s.KEY === 'IS_MASK')?.VALUE !== 'N';
+
   // 創建繪製圖表的函數
   const drawChart = () => {
-    if (!data || !data.length) return;
+    // 如果被遮罩或沒有數據，直接返回
+    if (isMasked || !data || !data.length || !containerRef.current) return;
 
     // 過濾出野獸模式的資料，並按抱石分數降序排序
     const filteredData = data
@@ -390,8 +396,11 @@ const BeastScoreListChart = ({ data }) => {
 
   // 初始繪製
   useEffect(() => {
-    drawChart();
-  }, [data, isVisible, animationPlayed]); // 添加 animationPlayed 作為依賴
+    // 只在非遮罩狀態下繪製圖表
+    if (!isMasked) {
+      drawChart();
+    }
+  }, [data, isVisible, animationPlayed, isMasked]); // 添加 isMasked 作為依賴
 
   // 設置 Intersection Observer 來檢測元素是否可見
   useEffect(() => {
@@ -425,7 +434,10 @@ const BeastScoreListChart = ({ data }) => {
   // 監聽視窗大小變化
   useEffect(() => {
     const handleResize = () => {
-      drawChart();
+      // 只在非遮罩狀態下重繪圖表
+      if (!isMasked) {
+        drawChart();
+      }
     };
 
     window.addEventListener('resize', handleResize);
@@ -433,11 +445,51 @@ const BeastScoreListChart = ({ data }) => {
     return () => {
       window.removeEventListener('resize', handleResize);
     };
-  }, [data, isVisible, animationPlayed]); // 添加 animationPlayed 作為依賴
+  }, [data, isVisible, animationPlayed, isMasked]); // 添加 isMasked 作為依賴
 
   return (
-    <div ref={containerRef} className="w-full h-full">
-      <svg ref={svgRef} className="w-full h-full"></svg>
+    <div className="relative w-full h-full">
+      {!isMasked ? (
+        <div ref={containerRef} className="w-full h-full">
+          <svg ref={svgRef} className="w-full h-full"></svg>
+        </div>
+      ) : (
+        <div className="w-full h-full flex items-center justify-center">
+          <div className="flex flex-col items-center justify-center">
+            <div className="w-48 h-48">
+              <Lottie
+                animationData={loadingAnimation}
+                loop={true}
+                autoplay={true}
+              />
+            </div>
+            <span
+              className="text-[#FFD700] text-xl font-bold mt-4"
+              style={{
+                textShadow: `
+                    2px 2px 4px rgba(255, 215, 0, 0.5),
+                    0 0 10px rgba(255, 215, 0, 0.3),
+                    0 0 20px rgba(255, 215, 0, 0.2)
+                  `,
+              }}
+            >
+              星際機密！猛獸秘密出航 🦍
+            </span>
+            <span
+              className="text-[#BD00FF] text-xl font-bold mt-2"
+              style={{
+                textShadow: `
+                    2px 2px 4px rgba(189, 0, 255, 0.5),
+                    0 0 10px rgba(189, 0, 255, 0.3),
+                    0 0 20px rgba(189, 0, 255, 0.2)
+                  `,
+              }}
+            >
+              觀眾請預測誰會奪得猛王座🤩
+            </span>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

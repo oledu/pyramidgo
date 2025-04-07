@@ -2,12 +2,12 @@
 import { useState, useEffect, useRef } from 'react';
 
 const Banner = ({ onPeriodChange }) => {
-  const [selectedPeriod, setSelectedPeriod] = useState('202502T');
+  const [selectedPeriod, setSelectedPeriod] = useState('202503T');
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
   useEffect(() => {
-    onPeriodChange('202502T');
+    onPeriodChange('202503T');
   }, []);
 
   useEffect(() => {
@@ -23,7 +23,7 @@ const Banner = ({ onPeriodChange }) => {
     };
   }, []);
 
-  const periods = ['202501T', '202502T'];
+  const periods = ['202501T', '202502T', '202503T'];
 
   const handlePeriodSelect = (period) => {
     setSelectedPeriod(period);
@@ -84,10 +84,10 @@ const Banner = ({ onPeriodChange }) => {
                   className={`w-full px-3 md:px-4 py-1.5 text-left text-sm md:text-base
                            transition-colors
                            ${
-                    selectedPeriod === period
-                      ? 'bg-purple-500 text-white'
-                      : 'text-gray-300 hover:bg-gray-800 hover:text-white'
-                  }`}
+                             selectedPeriod === period
+                               ? 'bg-purple-500 text-white'
+                               : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                           }`}
                   onClick={() => handlePeriodSelect(period)}
                 >
                   {period}

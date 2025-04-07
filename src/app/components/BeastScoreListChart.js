@@ -12,11 +12,20 @@ const BeastScoreListChart = ({ data, settings }) => {
 
   // 檢查是否需要遮罩
   const isMasked = settings?.find((s) => s.KEY === 'IS_MASK')?.VALUE !== 'N';
+  const isBeastMode =
+    settings?.find((s) => s.KEY === 'IS_BEAST_MODE')?.VALUE !== 'N';
 
   // 創建繪製圖表的函數
   const drawChart = () => {
     // 如果被遮罩或沒有數據，直接返回
-    if (isMasked || !data || !data.length || !containerRef.current) return;
+    if (
+      isMasked ||
+      isBeastMode ||
+      !data ||
+      !data.length ||
+      !containerRef.current
+    )
+      return;
 
     // 過濾出野獸模式的資料，並按抱石分數降序排序
     const filteredData = data
@@ -397,10 +406,10 @@ const BeastScoreListChart = ({ data, settings }) => {
   // 初始繪製
   useEffect(() => {
     // 只在非遮罩狀態下繪製圖表
-    if (!isMasked) {
+    if (!isMasked && isBeastMode) {
       drawChart();
     }
-  }, [data, isVisible, animationPlayed, isMasked]); // 添加 isMasked 作為依賴
+  }, [data, isVisible, animationPlayed, isMasked, isBeastMode]); // 添加 isMasked 作為依賴
 
   // 設置 Intersection Observer 來檢測元素是否可見
   useEffect(() => {
@@ -435,7 +444,7 @@ const BeastScoreListChart = ({ data, settings }) => {
   useEffect(() => {
     const handleResize = () => {
       // 只在非遮罩狀態下重繪圖表
-      if (!isMasked) {
+      if (!isMasked && isBeastMode) {
         drawChart();
       }
     };
@@ -445,11 +454,11 @@ const BeastScoreListChart = ({ data, settings }) => {
     return () => {
       window.removeEventListener('resize', handleResize);
     };
-  }, [data, isVisible, animationPlayed, isMasked]); // 添加 isMasked 作為依賴
+  }, [data, isVisible, animationPlayed, isMasked, isBeastMode]); // 添加 isMasked 作為依賴
 
   return (
     <div className="relative w-full h-full">
-      {!isMasked ? (
+      {isBeastMode && !isMasked ? (
         <div ref={containerRef} className="w-full h-full">
           <svg ref={svgRef} className="w-full h-full"></svg>
         </div>
@@ -473,7 +482,8 @@ const BeastScoreListChart = ({ data, settings }) => {
                   `,
               }}
             >
-              星際機密！猛獸秘密出航 🦍
+              {isMasked ? '星際機密！猛獸秘密出航 🦍' : ''}
+              {!isBeastMode ? '猛獸潛航中 🛸' : ''}
             </span>
             <span
               className="text-[#BD00FF] text-xl font-bold mt-2"
@@ -485,7 +495,8 @@ const BeastScoreListChart = ({ data, settings }) => {
                   `,
               }}
             >
-              觀眾請預測誰會奪得猛王座🤩
+              {isMasked ? '觀眾請預測誰會奪得猛王座🤩' : ''}
+              {!isBeastMode ? '請繼續關注，下次出航即將燃爆宇宙🔥' : ''}{' '}
             </span>
           </div>
         </div>

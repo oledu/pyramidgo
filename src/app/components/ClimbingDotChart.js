@@ -63,9 +63,11 @@ const ClimbingDotChart = ({ data, period }) => {
     const getDateRange = (period) => {
       switch (period) {
         case '202501T':
-          return d3.range(2, 16).map((d) => `3/${d}`); // 3/2q-3/15
+          return d3.range(2, 16).map((d) => `3/${d}`); // 3/2-3/15
         case '202502T':
           return d3.range(16, 30).map((d) => `3/${d}`); // 3/16-3/28
+        case '202503T':
+          return d3.range(6, 20).map((d) => `4/${d}`); // 3/2-3/15
         default:
           return d3.range(16, 30).map((d) => `3/${d}`); // 預設值
       }
@@ -77,13 +79,13 @@ const ClimbingDotChart = ({ data, period }) => {
 
     // 修改顏色函數，使用淺紅到深紅的漸變，超過20次使用金色
     const getColor = (value) => {
-      if (value === 0) return '#1a1a2e';     // 深藍黑色背景 - 沒有完成記錄
-      if (value > 0 && value <= 5) return '#ff9999';   // 最淺紅色 - 1-5次
-      if (value > 5 && value <= 10) return '#ff4d4d';  // 淺紅色 - 6-10次
+      if (value === 0) return '#1a1a2e'; // 深藍黑色背景 - 沒有完成記錄
+      if (value > 0 && value <= 5) return '#ff9999'; // 最淺紅色 - 1-5次
+      if (value > 5 && value <= 10) return '#ff4d4d'; // 淺紅色 - 6-10次
       if (value > 10 && value <= 15) return '#cc0000'; // 深紅色 - 11-15次
       if (value > 15 && value <= 20) return '#800000'; // 最深紅色 - 16-20次
-      if (value > 20) return '#ffd700';       // 金色 - 超過20次
-      return '#1a1a2e';                       // 默認顏色
+      if (value > 20) return '#ffd700'; // 金色 - 超過20次
+      return '#1a1a2e'; // 默認顏色
     };
 
     let yPosition = 0;

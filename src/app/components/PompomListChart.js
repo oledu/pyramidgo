@@ -41,31 +41,9 @@ const PompomListChart = ({ data }) => {
     // 添加漸層定義
     const defs = svg.append('defs');
 
-    // 創建球體漸層
-    const gradient = defs
-      .append('radialGradient')
-      .attr('id', 'ballGradient')
-      .attr('cx', '35%')
-      .attr('cy', '35%')
-      .attr('r', '60%');
-
-    gradient
-      .append('stop')
-      .attr('offset', '0%')
-      .attr('stop-color', '#ff7777') // 亮色
-      .attr('stop-opacity', 1);
-
-    gradient
-      .append('stop')
-      .attr('offset', '50%')
-      .attr('stop-color', '#ff4444') // 中間色
-      .attr('stop-opacity', 1);
-
-    gradient
-      .append('stop')
-      .attr('offset', '100%')
-      .attr('stop-color', '#cc0000') // 暗色
-      .attr('stop-opacity', 1);
+    // 創建球體圖片
+    const pompomImage = new Image();
+    pompomImage.src = '/pompom.png';  // 請確保圖片放在 public 資料夾中
 
     // 建立每一行
     const rows = svg
@@ -86,27 +64,28 @@ const PompomListChart = ({ data }) => {
       .style('font-size', '16px')
       .text((d) => d.CLMBR_NM);
 
-    // 為每一行添加彩球圓圈
+    // 為每一行添加彩球圖片
     rows.each(function (d) {
       const row = d3.select(this);
       const pompomCount = d.POMPOM_TOTAL;
 
-      // 添加圓圈群組
-      const circles = row
+      // 添加圖片群組
+      const images = row
         .append('g')
         .attr(
           'transform',
           `translate(${width - pompomCount * circleSpacing}, ${itemHeight / 2})`
         );
 
-      // 添加多個球體
+      // 添加多個圖片
       for (let i = 0; i < pompomCount; i++) {
-        circles
-          .append('circle')
-          .attr('cx', i * circleSpacing)
-          .attr('cy', 0)
-          .attr('r', circleRadius)
-          .attr('fill', 'url(#ballGradient)'); // 使用漸層
+        images
+          .append('image')
+          .attr('x', i * circleSpacing - circleRadius)
+          .attr('y', -circleRadius)
+          .attr('width', circleRadius * 2)
+          .attr('height', circleRadius * 2)
+          .attr('xlink:href', '/pompom.png');
       }
     });
 

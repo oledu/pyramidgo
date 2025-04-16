@@ -9,6 +9,7 @@ import BeastScoreListChart from './BeastScoreListChart';
 import IndividualSpScoreStackBarChart from './IndividualSpScoreStackBarChart';
 import IndividualBldScoreStackBarChart from './IndividualBldScoreStackBarChart';
 import ClimbingDotChart from './ClimbingDotChart';
+import FragmentListChart from './FragmentListChart';
 // import Lottie from 'lottie-react';
 import dynamic from 'next/dynamic';
 import climbingAnimation from '../animations/climbing.json';
@@ -53,6 +54,9 @@ const DataCharts = ({ data, loading, error, onPeriodChange }) => {
     { id: 'individualSp', name: '上攀' },
     { id: 'climbing', name: '攀爬日記' },
   ];
+
+  const isFragment =
+    settings?.find((s) => s.KEY === 'IS_FRAGMENT')?.VALUE === 'Y';
 
   if (error) return <div>Error: {error}</div>;
 
@@ -143,6 +147,23 @@ const DataCharts = ({ data, loading, error, onPeriodChange }) => {
                           </h2>
                           <PompomListChart data={pompom} />
                         </div>
+                        {isFragment ? (
+                          <div
+                            style={{
+                              minHeight: '200px',
+                              backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                              borderRadius: '8px',
+                            }}
+                            className="p-2"
+                          >
+                            <h2 className="text-white text-center text-xl font-bold mb-4">
+                              星際碎片
+                            </h2>
+                            <FragmentListChart data={data?.fragments} />
+                          </div>
+                        ) : (
+                          <></>
+                        )}
                         <div
                           style={{
                             minHeight: '200px',

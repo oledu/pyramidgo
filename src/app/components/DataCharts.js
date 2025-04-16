@@ -157,7 +157,7 @@ const DataCharts = ({ data, loading, error, onPeriodChange }) => {
                             className="p-2"
                           >
                             <h2 className="text-white text-center text-xl font-bold mb-4">
-                              星際碎片
+                              徽章碎片
                             </h2>
                             <FragmentListChart data={data?.fragments} />
                           </div>

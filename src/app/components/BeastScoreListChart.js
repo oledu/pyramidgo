@@ -20,7 +20,7 @@ const BeastScoreListChart = ({ data, settings }) => {
     // 如果被遮罩或沒有數據，直接返回
     if (
       isMasked ||
-      isBeastMode ||
+      !isBeastMode ||
       !data ||
       !data.length ||
       !containerRef.current

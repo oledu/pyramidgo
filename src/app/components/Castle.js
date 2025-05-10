@@ -171,62 +171,119 @@ const Castle = ({ data, period }) => {
       );
     };
 
+    // 處理城堡參與者數據，依據CLMBR_NM和HOME_GYM找出最新的記錄
+    const processLatestCastleParticipants = (participants) => {
+      if (
+        !participants ||
+        !Array.isArray(participants) ||
+        participants.length === 0
+      )
+        return [];
+
+      // 使用reduce方法處理所有參與者記錄
+      // 創建一個對象，以 "玩家名稱-主場館" 組合為key，最新記錄為value
+      return Object.values(
+        participants.reduce((latest, participant) => {
+          const key = `${participant.CLMBR_NM}-${participant.HOME_GYM}`;
+          const currentDate = new Date(participant.START_DATE);
+
+          // 如果這個組合尚未記錄，或此記錄的日期比已存在的更新
+          if (!latest[key] || new Date(latest[key].START_DATE) < currentDate) {
+            latest[key] = participant;
+          }
+
+          return latest;
+        }, {})
+      );
+    };
+
     // 如果有數據，處理城堡記錄
     let processedCastles = [];
     if (data && data.castle_records) {
       processedCastles = processLatestCastleRecords(data.castle_records);
       console.log('處理後的城堡記錄:', processedCastles);
-    } else {
-      // 如果沒有數據，使用示例數據進行測試
-      const sampleCastleRecords = [
-        {
-          START_DATE: '2025/4/11',
-          CASTLE: 'Tup Mingde',
-          HP: '10000',
-        },
-        {
-          START_DATE: '2025/4/6',
-          CASTLE: 'Tup Wanhua',
-          HP: '9000',
-        },
-        {
-          START_DATE: '2025/4/12',
-          CASTLE: 'Tup A19',
-          HP: '8000',
-        },
-        {
-          START_DATE: '2025/5/11',
-          CASTLE: 'Tup Zhonghe',
-          HP: '7000',
-        },
-        {
-          START_DATE: '2025/5/11',
-          CASTLE: 'Tup Hsindian',
-          HP: '6000',
-        },
-        {
-          START_DATE: '2025/5/11',
-          CASTLE: 'Tup Nangang',
-          HP: '5000',
-        },
-        {
-          START_DATE: '2025/5/11',
-          CASTLE: 'Corner Huashan',
-          HP: '4000',
-        },
-        {
-          START_DATE: '2025/5/11',
-          CASTLE: 'Corner Zhongshan',
-          HP: '3000',
-        },
-        {
-          START_DATE: '2025/5/13',
-          CASTLE: 'Corner Zhongshan',
-          HP: '2800',
-        },
-      ];
-      processedCastles = processLatestCastleRecords(sampleCastleRecords);
-      console.log('處理後的示例城堡記錄:', processedCastles);
+    }
+
+    // 如果有參與者數據，處理參與者記錄
+    let processedParticipants = [];
+    if (data && data.castle_participants) {
+      processedParticipants = processLatestCastleParticipants(
+        data.castle_participants
+      );
+      console.log('處理後的參與者記錄:', processedParticipants);
+    }
+
+    // 處理攀岩記錄並與參與者信息結合
+    const processClimbingRecordsWithParticipants = (
+      climbingRecords,
+      participants
+    ) => {
+      console.log(
+        'processClimbingRecordsWithParticipants',
+        climbingRecords,
+        participants
+      );
+
+      if (
+        !climbingRecords ||
+        !Array.isArray(climbingRecords) ||
+        climbingRecords.length === 0
+      ) {
+        return [];
+      }
+
+      // 只處理有效的攀岩記錄（需要有GYM_NM和DATE）
+      const validRecords = climbingRecords.filter(
+        (record) => record.GYM_NM && record.DATE
+      );
+
+      // 將參與者數據轉換為以CLMBR_NM為鍵的查找映射
+      const participantMap = participants.reduce((map, participant) => {
+        if (!map[participant.CLMBR_NM]) {
+          map[participant.CLMBR_NM] = [];
+        }
+        map[participant.CLMBR_NM].push(participant);
+        return map;
+      }, {});
+
+      // 處理每一條攀岩記錄
+      return validRecords.map((record) => {
+        // 獲取攀岩者的參與者記錄
+        const climberParticipants = participantMap[record.CLMBR_NM] || [];
+
+        // 格式化攀岩記錄的日期（添加年份）
+        const recordYear = '2025/'; // 假設記錄的年份是2025
+        const recordDate = new Date(recordYear + record.DATE);
+
+        // 尋找匹配的參與者記錄
+        const matchingParticipant = climberParticipants.find((participant) => {
+          // 檢查健身房是否匹配
+          const gymMatches = participant.HOME_GYM === record.GYM_NM;
+
+          // 檢查日期是否在範圍內
+          const startDate = new Date(participant.START_DATE);
+          const endDate = new Date(participant.END_DATE);
+          const dateInRange = recordDate >= startDate && recordDate <= endDate;
+
+          return gymMatches && dateInRange;
+        });
+
+        // 只添加isHomeGym標記，表示是否為主場館
+        return {
+          ...record,
+          isHomeGym: !!matchingParticipant, // 如果找到匹配的參與者記錄，則為主場館
+        };
+      });
+    };
+
+    // 處理攀岩記錄
+    let processedClimbingRecords = [];
+    if (data && data.climbRecords) {
+      processedClimbingRecords = processClimbingRecordsWithParticipants(
+        data.climbRecords,
+        processedParticipants
+      );
+      console.log('處理後的攀岩記錄:', processedClimbingRecords);
     }
 
     // 創建漸變色血條的輔助函數

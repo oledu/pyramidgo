@@ -22,7 +22,7 @@ const Lottie = dynamic(() => import('lottie-react'), {
 
 const DataCharts = ({ data, loading, error, onPeriodChange }) => {
   const [activeTab, setActiveTab] = useState('overview');
-  const [currentPeriod, setCurrentPeriod] = useState('202503T');
+  const [currentPeriod, setCurrentPeriod] = useState('202504T');
 
   console.log('data', data);
 
@@ -48,13 +48,7 @@ const DataCharts = ({ data, loading, error, onPeriodChange }) => {
 
   const tabs = [
     { id: 'overview', name: '總覽' },
-    { id: 'teamPompom', name: '團隊彩球' },
-    { id: 'pompom', name: '個人彩球' },
-    { id: 'beast', name: '抱石猛獸' },
-    { id: 'individualBld', name: '抱石' },
-    { id: 'individualSp', name: '上攀' },
-    { id: 'climbing', name: '攀爬日記' },
-    { id: 'castle', name: '攻城戰' },
+    { id: 'castle', name: '岩城尋寶' },
   ];
 
   const isFragment =
@@ -258,81 +252,7 @@ const DataCharts = ({ data, loading, error, onPeriodChange }) => {
                 </div>
               </div>
             )}
-            {activeTab === 'individualSp' && (
-              <div
-                style={{
-                  minHeight: '300px',
-                  backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                  borderRadius: '8px',
-                  position: 'relative',
-                }}
-              >
-                <IndividualSpScoreStackBarChart data={scores} />{' '}
-              </div>
-            )}
-            {activeTab === 'individualBld' && (
-              <div
-                style={{
-                  minHeight: '300px',
-                  backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                  borderRadius: '8px',
-                  position: 'relative',
-                }}
-              >
-                <IndividualBldScoreStackBarChart data={scores} />
-              </div>
-            )}
-            {activeTab === 'beast' && (
-              <div
-                style={{
-                  minHeight: '300px',
-                  backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                  borderRadius: '8px',
-                  position: 'relative',
-                }}
-              >
-                <BeastScoreListChart data={scores} settings={settings} />
-              </div>
-            )}
-            {activeTab === 'pompom' && (
-              <div
-                style={{
-                  minHeight: '300px',
-                  backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                  borderRadius: '8px',
-                  position: 'relative',
-                }}
-              >
-                <PompomListChart data={pompom} />
-              </div>
-            )}
-            {activeTab === 'teamPompom' && (
-              <div
-                style={{
-                  minHeight: '300px',
-                  backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                  borderRadius: '8px',
-                  position: 'relative',
-                }}
-              >
-                <TeamPompomBubbleChart
-                  data={pompomTeam}
-                  individualData={pompom}
-                />
-              </div>
-            )}
-            {activeTab === 'climbing' && (
-              <div
-                style={{
-                  minHeight: '300px',
-                  backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                  borderRadius: '8px',
-                  position: 'relative',
-                }}
-              >
-                <ClimbingDotChart data={scores} period={currentPeriod} />
-              </div>
-            )}
+
             {activeTab === 'castle' && (
               <div>
                 <Castle data={data} period={currentPeriod} />

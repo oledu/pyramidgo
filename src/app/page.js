@@ -32,7 +32,7 @@ export default function Home() {
 
   // 初始載入
   useEffect(() => {
-    handlePeriodChange('202503T');
+    handlePeriodChange('202504T');
   }, []);
 
   return (

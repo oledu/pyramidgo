@@ -11,6 +11,8 @@ const Castle = ({ data, period }) => {
     return null;
   }
 
+  console.log('dataCastle', data);
+
   const containerRef = useRef(null);
   const canvasRef = useRef(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
@@ -143,6 +145,89 @@ const Castle = ({ data, period }) => {
     canvas.height = dimensions.height;
 
     setIsLoading(true);
+
+    // 處理城堡記錄數據，找出每個城堡最新的記錄
+    const processLatestCastleRecords = (records) => {
+      if (!records || !Array.isArray(records) || records.length === 0)
+        return [];
+
+      // 使用reduce方法一次性處理所有記錄
+      // 創建一個對象，以城堡名稱為key，最新記錄為value
+      return Object.values(
+        records.reduce((latest, record) => {
+          const castle = record.CASTLE;
+          const currentDate = new Date(record.START_DATE);
+
+          // 如果這個城堡尚未記錄，或此記錄的日期比已存在的更新
+          if (
+            !latest[castle] ||
+            new Date(latest[castle].START_DATE) < currentDate
+          ) {
+            latest[castle] = record;
+          }
+
+          return latest;
+        }, {})
+      );
+    };
+
+    // 如果有數據，處理城堡記錄
+    let processedCastles = [];
+    if (data && data.castle_records) {
+      processedCastles = processLatestCastleRecords(data.castle_records);
+      console.log('處理後的城堡記錄:', processedCastles);
+    } else {
+      // 如果沒有數據，使用示例數據進行測試
+      const sampleCastleRecords = [
+        {
+          START_DATE: '2025/4/11',
+          CASTLE: 'Tup Mingde',
+          HP: '10000',
+        },
+        {
+          START_DATE: '2025/4/6',
+          CASTLE: 'Tup Wanhua',
+          HP: '9000',
+        },
+        {
+          START_DATE: '2025/4/12',
+          CASTLE: 'Tup A19',
+          HP: '8000',
+        },
+        {
+          START_DATE: '2025/5/11',
+          CASTLE: 'Tup Zhonghe',
+          HP: '7000',
+        },
+        {
+          START_DATE: '2025/5/11',
+          CASTLE: 'Tup Hsindian',
+          HP: '6000',
+        },
+        {
+          START_DATE: '2025/5/11',
+          CASTLE: 'Tup Nangang',
+          HP: '5000',
+        },
+        {
+          START_DATE: '2025/5/11',
+          CASTLE: 'Corner Huashan',
+          HP: '4000',
+        },
+        {
+          START_DATE: '2025/5/11',
+          CASTLE: 'Corner Zhongshan',
+          HP: '3000',
+        },
+        {
+          START_DATE: '2025/5/13',
+          CASTLE: 'Corner Zhongshan',
+          HP: '2800',
+        },
+      ];
+      processedCastles = processLatestCastleRecords(sampleCastleRecords);
+      console.log('處理後的示例城堡記錄:', processedCastles);
+    }
 
     // 創建漸變色血條的輔助函數
     function createGradient(ctx, x, y, width, height, healthPercent) {
@@ -400,53 +485,77 @@ const Castle = ({ data, period }) => {
           y: 0.32,
           health: { current: 8000, total: 10000 },
           cname: '原岩明德',
+          castleId: 'Tup Mingde',
         },
         {
           x: 0.44,
           y: 0.44,
           health: { current: 7500, total: 10000 },
           cname: '角中山',
+          castleId: 'Corner Zhongshan',
         },
         {
           x: 0.2,
           y: 0.55,
           health: { current: 6000, total: 10000 },
           cname: '原岩萬華',
+          castleId: 'Tup Wanhua',
         },
         {
           x: 0.595,
           y: 0.515,
           health: { current: 9000, total: 10000 },
           cname: '角華山',
+          castleId: 'Corner Huashan',
         },
         {
           x: 0.36,
           y: 0.675,
           health: { current: 4500, total: 10000 },
           cname: '原岩中和',
+          castleId: 'Tup Zhonghe',
         },
         {
           x: 0.15,
           y: 0.81,
           health: { current: 15, total: 10000 },
           cname: '原岩A19',
+          castleId: 'Tup A19',
         },
         {
           x: 0.61,
           y: 0.75,
           health: { current: 5000, total: 10000 },
           cname: '原岩新店',
+          castleId: 'Tup Hsindian',
         },
         {
           x: 0.86,
           y: 0.58,
           health: { current: 2000, total: 10000 },
           cname: '原岩南港',
+          castleId: 'Tup Nangang',
         },
       ];
 
       // 更新城堡位置參考
       castlePositionsRef.current = testPositions;
+
+      // 根據處理後的城堡記錄更新城堡血量
+      if (processedCastles.length > 0) {
+        testPositions.forEach((position) => {
+          const castleRecord = processedCastles.find(
+            (record) => record.CASTLE === position.castleId
+          );
+          if (castleRecord) {
+            position.health.current = parseInt(castleRecord.HP);
+            // 確保當前血量不超過總血量
+            if (position.health.current > position.health.total) {
+              position.health.total = position.health.current;
+            }
+          }
+        });
+      }
 
       testPositions.forEach((pos) => {
         // 使用自定義血條

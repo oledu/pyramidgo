@@ -7,8 +7,6 @@ import { useEffect, useRef, useState } from 'react';
  * @param {string} period - 當前時期
  */
 const Castle = ({ data, period }) => {
-  console.log('period', period);
-
   if (period < '202504T') {
     return null;
   }
@@ -17,6 +15,9 @@ const Castle = ({ data, period }) => {
   const canvasRef = useRef(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedCastle, setSelectedCastle] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const castlePositionsRef = useRef([]);
 
   // 根據容器設置 Canvas 尺寸
   useEffect(() => {
@@ -37,6 +38,98 @@ const Castle = ({ data, period }) => {
     window.addEventListener('resize', updateDimensions);
     return () => window.removeEventListener('resize', updateDimensions);
   }, []);
+
+  // 處理點擊事件
+  useEffect(() => {
+    const handleClick = (event) => {
+      if (!canvasRef.current) return;
+
+      // 獲取點擊位置相對於Canvas的座標
+      const rect = canvasRef.current.getBoundingClientRect();
+      const x = (event.clientX - rect.left) / rect.width;
+      const y = (event.clientY - rect.top) / rect.height;
+
+      // 檢查是否點擊了任何城堡
+      const clickedCastle = castlePositionsRef.current.find((castle) => {
+        // 計算點擊位置和城堡中心點的距離
+        const dx = x - castle.x;
+        const dy = y - castle.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        // 擴大可點擊區域，使其更容易點擊
+        return distance < 0.08; // 增加點擊區域範圍
+      });
+
+      if (clickedCastle) {
+        setSelectedCastle(clickedCastle);
+        setShowModal(true);
+      }
+    };
+
+    // 如果Canvas已經加載，添加點擊事件監聽器
+    if (canvasRef.current) {
+      canvasRef.current.addEventListener('click', handleClick);
+    }
+
+    return () => {
+      if (canvasRef.current) {
+        canvasRef.current.removeEventListener('click', handleClick);
+      }
+    };
+  }, [dimensions]);
+
+  // 鼠標懸停效果
+  useEffect(() => {
+    if (!canvasRef.current) return;
+
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+
+    // 記錄原始繪圖函數的參考
+    const originalDrawImages = canvas._drawImages;
+
+    // 當前懸停的城堡
+    let hoveredCastle = null;
+
+    // 鼠標移動事件處理
+    const handleMouseMove = (event) => {
+      if (!canvas) return;
+
+      const rect = canvas.getBoundingClientRect();
+      const x = (event.clientX - rect.left) / rect.width;
+      const y = (event.clientY - rect.top) / rect.height;
+
+      // 檢查是否懸停在任何城堡上
+      const castle = castlePositionsRef.current.find((castle) => {
+        const dx = x - castle.x;
+        const dy = y - castle.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        return distance < 0.08; // 使用與點擊相同的範圍
+      });
+
+      // 改變鼠標指針樣式
+      if (castle) {
+        canvas.style.cursor = 'pointer';
+      } else {
+        canvas.style.cursor = 'default';
+      }
+
+      // 如果懸停城堡發生變化，重繪Canvas
+      if (castle !== hoveredCastle) {
+        hoveredCastle = castle;
+        // 重繪Canvas以顯示懸停效果
+        if (typeof originalDrawImages === 'function') {
+          originalDrawImages(hoveredCastle);
+        }
+      }
+    };
+
+    canvas.addEventListener('mousemove', handleMouseMove);
+
+    return () => {
+      canvas.removeEventListener('mousemove', handleMouseMove);
+    };
+  }, [dimensions]);
 
   // 繪製重疊圖片
   useEffect(() => {
@@ -352,6 +445,9 @@ const Castle = ({ data, period }) => {
         },
       ];
 
+      // 更新城堡位置參考
+      castlePositionsRef.current = testPositions;
+
       testPositions.forEach((pos) => {
         // 使用自定義血條
         layers.push({
@@ -516,7 +612,7 @@ const Castle = ({ data, period }) => {
     }
 
     // 繪製所有圖層
-    const drawImages = async () => {
+    const drawImages = async (hoveredCastle = null) => {
       // 清除畫布
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -542,7 +638,40 @@ const Castle = ({ data, period }) => {
               layer.health
             );
           } else if (layer.type === 'circle') {
-            // 繪製圓形（用於城堡圖示）
+            // 使用圓形代替城堡圖示，並處理懸停效果
+            const isCastleHovered =
+              hoveredCastle &&
+              hoveredCastle.x === layer.x &&
+              hoveredCastle.y === layer.y;
+
+            // 如果正在懸停，繪製較大的提示圓圈
+            if (isCastleHovered) {
+              // 繪製外圍提示環
+              ctx.beginPath();
+              ctx.arc(
+                layer.x * canvas.width,
+                layer.y * canvas.height,
+                layer.radius * 1.5 * canvas.width,
+                0,
+                Math.PI * 2
+              );
+              ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+              ctx.fill();
+
+              // 繪製內部提示陰影
+              ctx.beginPath();
+              ctx.arc(
+                layer.x * canvas.width,
+                layer.y * canvas.height,
+                layer.radius * 1.2 * canvas.width,
+                0,
+                Math.PI * 2
+              );
+              ctx.fillStyle = 'rgba(255, 100, 100, 0.5)';
+              ctx.fill();
+            }
+
+            // 繪製原始圓形
             ctx.beginPath();
             ctx.arc(
               layer.x * canvas.width,
@@ -551,7 +680,11 @@ const Castle = ({ data, period }) => {
               0,
               Math.PI * 2
             );
-            ctx.fillStyle = layer.color;
+
+            // 如果正在懸停，使用更亮的顏色
+            ctx.fillStyle = isCastleHovered
+              ? 'rgba(255, 200, 200, 0.9)'
+              : layer.color;
             ctx.fill();
           } else if (layer.type === 'castle') {
             // 繪製復古風格城堡
@@ -603,6 +736,13 @@ const Castle = ({ data, period }) => {
             });
           }
         }
+
+        // 添加城堡可點擊提示
+        ctx.font = '14px Arial';
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+        ctx.textAlign = 'center';
+        ctx.fillText('點擊城堡查看詳情', canvas.width / 2, 30);
+
         setIsLoading(false);
       } catch (error) {
         console.error('Error drawing images:', error);
@@ -610,8 +750,17 @@ const Castle = ({ data, period }) => {
       }
     };
 
+    // 保存繪圖函數引用以便懸停效果使用
+    canvas._drawImages = drawImages;
+
     drawImages();
   }, [dimensions, data, period]);
+
+  // 關閉Modal
+  const closeModal = () => {
+    setShowModal(false);
+    setSelectedCastle(null);
+  };
 
   return (
     <div className="w-full flex flex-col items-center">
@@ -627,6 +776,71 @@ const Castle = ({ data, period }) => {
           className="w-full h-full"
         />
       </div>
+
+      {/* 城堡詳情模態框 */}
+      {showModal && selectedCastle && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/70">
+          <div className="bg-gray-900 border-2 border-red-800 rounded-lg p-6 max-w-md w-11/12 text-center relative">
+            <button
+              onClick={closeModal}
+              className="absolute top-2 right-2 text-gray-400 hover:text-white text-xl"
+            >
+              ✕
+            </button>
+
+            <h2 className="text-xl font-bold text-red-500 mb-4">
+              {selectedCastle.cname}
+            </h2>
+
+            <div className="mb-4">
+              <div className="w-full bg-gray-800 rounded-full h-4 mb-2">
+                <div
+                  className="bg-gradient-to-r from-red-700 to-red-500 h-4 rounded-full"
+                  style={{
+                    width: `${(selectedCastle.health.current / selectedCastle.health.total) * 100}%`,
+                  }}
+                ></div>
+              </div>
+              <p className="text-white">
+                血量: {selectedCastle.health.current} /{' '}
+                {selectedCastle.health.total}(
+                {Math.ceil(
+                  (selectedCastle.health.current /
+                    selectedCastle.health.total) *
+                    1000
+                ) / 10}
+                %)
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              <div className="bg-gray-800 p-3 rounded">
+                <p className="text-gray-400 text-sm">攻擊力</p>
+                <p className="text-white font-bold">1200</p>
+              </div>
+              <div className="bg-gray-800 p-3 rounded">
+                <p className="text-gray-400 text-sm">防禦力</p>
+                <p className="text-white font-bold">850</p>
+              </div>
+              <div className="bg-gray-800 p-3 rounded">
+                <p className="text-gray-400 text-sm">人口</p>
+                <p className="text-white font-bold">5000</p>
+              </div>
+              <div className="bg-gray-800 p-3 rounded">
+                <p className="text-gray-400 text-sm">資源</p>
+                <p className="text-white font-bold">10500</p>
+              </div>
+            </div>
+
+            <button
+              className="bg-red-700 hover:bg-red-600 text-white font-bold py-2 px-6 rounded-full"
+              onClick={closeModal}
+            >
+              關閉
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

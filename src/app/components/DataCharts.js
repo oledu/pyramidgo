@@ -11,6 +11,7 @@ import IndividualBldScoreStackBarChart from './IndividualBldScoreStackBarChart';
 import ClimbingDotChart from './ClimbingDotChart';
 import FragmentListChart from './FragmentListChart';
 import Castle from './Castle';
+import Rules from './Rules';
 // import Lottie from 'lottie-react';
 import dynamic from 'next/dynamic';
 import climbingAnimation from '../animations/climbing.json';
@@ -21,7 +22,7 @@ const Lottie = dynamic(() => import('lottie-react'), {
 });
 
 const DataCharts = ({ data, loading, error, onPeriodChange }) => {
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState('rules');
   const [currentPeriod, setCurrentPeriod] = useState('202504T');
 
   console.log('data', data);
@@ -47,8 +48,9 @@ const DataCharts = ({ data, loading, error, onPeriodChange }) => {
   // let teamPompom = pompom.
 
   const tabs = [
-    { id: 'overview', name: '總覽' },
-    { id: 'castle', name: '岩城尋寶' },
+    // { id: 'overview', name: '總覽' },
+    // { id: 'castle', name: '岩城尋寶' },
+    { id: 'rules', name: '岩城尋寶規則' },
   ];
 
   const isFragment =
@@ -256,6 +258,12 @@ const DataCharts = ({ data, loading, error, onPeriodChange }) => {
             {activeTab === 'castle' && (
               <div>
                 <Castle data={data} period={currentPeriod} />
+              </div>
+            )}
+
+            {activeTab === 'rules' && (
+              <div>
+                <Rules data={data} period={currentPeriod} />
               </div>
             )}
           </>

@@ -49,39 +49,13 @@ const Castle = ({ data, period }) => {
     // 每個圖層包含：圖片路徑、透明度、相對坐標和尺寸
     const layers = [
       {
-        src: '/castle_bg2.png', // 使用您提供的背景圖
+        src: '/castle_bg3.png', // 使用您提供的背景圖
         opacity: 1,
         x: 0,
         y: 0,
         w: 1,
         h: 1,
       },
-      // 調整城堡位置，散佈在宇宙中
-      {
-        src: '/castle.png', // 城堡圖片
-        opacity: 1,
-        x: 0.1,
-        y: 0.3,
-        w: 0.2,
-        h: 0.2,
-      },
-      {
-        src: '/castle.png',
-        opacity: 1,
-        x: 0.5,
-        y: 0.5,
-        w: 0.2,
-        h: 0.2,
-      },
-      {
-        src: '/castle.png',
-        opacity: 1,
-        x: 0.7,
-        y: 0.7,
-        w: 0.2,
-        h: 0.2,
-      },
-      // 可以添加更多元素...
     ];
 
     // 根據數據添加動態圖層
@@ -90,56 +64,6 @@ const Castle = ({ data, period }) => {
       // 舉例：根據分數添加不同的旗幟或裝飾
       const score =
         data.scores.reduce((total, item) => total + item.SCORE_TOTAL, 0) || 0;
-
-      if (score > 1000) {
-        layers.push({
-          src: '/castle/flag-gold.png',
-          opacity: 1,
-          x: 0.45,
-          y: 0.1,
-          w: 0.1,
-          h: 0.2,
-        });
-      } else if (score > 500) {
-        layers.push({
-          src: '/castle/flag-silver.png',
-          opacity: 1,
-          x: 0.45,
-          y: 0.1,
-          w: 0.1,
-          h: 0.2,
-        });
-      } else {
-        layers.push({
-          src: '/castle/flag-bronze.png',
-          opacity: 1,
-          x: 0.45,
-          y: 0.1,
-          w: 0.1,
-          h: 0.2,
-        });
-      }
-    }
-
-    // 根據時期添加季節性裝飾
-    if (period === 'winter') {
-      layers.push({
-        src: '/castle/snow-overlay.png',
-        opacity: 0.7,
-        x: 0,
-        y: 0,
-        w: 1,
-        h: 1,
-      });
-    } else if (period === 'spring') {
-      layers.push({
-        src: '/castle/cherry-blossoms.png',
-        opacity: 0.8,
-        x: 0,
-        y: 0,
-        w: 1,
-        h: 1,
-      });
     }
 
     // 繪製所有圖層
@@ -190,15 +114,9 @@ const Castle = ({ data, period }) => {
     <div className="w-full flex flex-col items-center">
       <div
         ref={containerRef}
-        className="w-full max-w-md mx-auto bg-black/50 rounded-lg overflow-hidden relative"
-        style={{ aspectRatio: '9/16' }} // 調整為手機螢幕標準比例
+        className="w-full mx-auto bg-black/50 rounded-lg overflow-hidden relative"
+        style={{ aspectRatio: '9/16', maxWidth: '900px' }} // 添加最大寬度 900px
       >
-        {isLoading && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white"></div>
-          </div>
-        )}
-
         <canvas
           ref={canvasRef}
           width={dimensions.width}

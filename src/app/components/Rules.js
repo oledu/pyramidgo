@@ -24,8 +24,17 @@ const Rules = ({ data, period }) => {
             <span className="bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center mr-2">
               1
             </span>
-            選角色
+            選你的角色
           </h2>
+
+          <div className="flex justify-center mb-6">
+            <img
+              src="/beast.png"
+              alt="beast"
+              className="w-full h-auto rounded-lg"
+            />
+          </div>
+
           <p className="text-gray-300 mb-4">
             選擇符合實力的角色。每個角色對應三種路線等級：
           </p>

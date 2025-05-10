@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { calculateScores } from '../utils/calculateScores';
 import { calculatePompom } from '../utils/calculatePompom';
 import { calculatePompomTeam } from '../utils/calculatePompomTeam';
@@ -32,6 +32,12 @@ const DataCharts = ({ data, loading, error, onPeriodChange }) => {
     onPeriodChange(period);
   };
 
+  useEffect(() => {
+    if (currentPeriod < '202504T') {
+      setActiveTab('overview');
+    }
+  }, [currentPeriod]);
+
   let { settings = [] } = data || {};
 
   // console.log('settings', settings);
@@ -50,7 +56,7 @@ const DataCharts = ({ data, loading, error, onPeriodChange }) => {
   const tabs = [
     // { id: 'overview', name: '總覽' },
     // { id: 'castle', name: '岩城尋寶' },
-    { id: 'rules', name: '岩城尋寶規則' },
+    // { id: 'rules', name: '岩城尋寶規則' },
   ];
 
   const isFragment =

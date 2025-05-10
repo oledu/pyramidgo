@@ -164,6 +164,8 @@ const Castle = ({ data, period }) => {
             new Date(latest[castle].START_DATE) < currentDate
           ) {
             latest[castle] = record;
+            // 添加原始血量字段，用於保存城堡初始血量
+            latest[castle].ORIGINAL_HP = record.HP;
           }
 
           return latest;
@@ -286,6 +288,108 @@ const Castle = ({ data, period }) => {
       console.log('處理後的攀岩記錄:', processedClimbingRecords);
     }
 
+    // 計算並更新城堡血量
+    const processCastleAttacks = (climbingRecords, castles) => {
+      if (
+        !climbingRecords ||
+        !Array.isArray(climbingRecords) ||
+        climbingRecords.length === 0 ||
+        !castles ||
+        !Array.isArray(castles) ||
+        castles.length === 0
+      ) {
+        return castles;
+      }
+
+      console.log('計算城堡攻擊', climbingRecords, castles);
+
+      // 創建城堡映射表，以城堡名稱為索引
+      const castleMap = castles.reduce((map, castle) => {
+        map[castle.CASTLE] = castle;
+        // 確保每個城堡有原始HP值
+        if (!castle.ORIGINAL_HP) {
+          castle.ORIGINAL_HP = castle.HP;
+        }
+        return map;
+      }, {});
+
+      // 為了確保每天每個攀岩者在每個健身房的攀爬記錄不超過5條
+      // 創建一個計數器: "攀岩者-日期-健身房" => 已計算的路線數
+      const dailyClimbCounter = {};
+
+      // 遍歷所有攀岩記錄，計算對城堡的傷害
+      climbingRecords.forEach((record) => {
+        // 確保記錄有健身房名稱且該健身房存在於城堡列表中
+        if (record.GYM_NM && castleMap[record.GYM_NM]) {
+          const castle = castleMap[record.GYM_NM];
+
+          // 檢查攀爬記錄時間是否在城堡的START_DATE之後
+          const recordYear = '2025/'; // 假設記錄的年份是2025
+          const recordDate = new Date(recordYear + record.DATE);
+          const castleStartDate = new Date(castle.START_DATE);
+
+          // 只處理城堡開放日期後的攀爬記錄
+          if (recordDate >= castleStartDate) {
+            let damage = 0;
+
+            // 計算攀爬記錄的指定日期在指定健身房的計數鍵
+            const climberKey = `${record.CLMBR_NM}-${record.DATE}-${record.GYM_NM}`;
+            dailyClimbCounter[climberKey] = dailyClimbCounter[climberKey] || 0;
+
+            // 如果該攀岩者當天在這個健身房的計數少於5，則計算傷害
+            if (dailyClimbCounter[climberKey] < 5) {
+              // 每條攀爬記錄扣20血
+              if (record.SENT_COUNT && !isNaN(parseInt(record.SENT_COUNT))) {
+                // 計算實際計入的路線數（考慮每日上限）
+                const countToAdd = Math.min(
+                  parseInt(record.SENT_COUNT),
+                  5 - dailyClimbCounter[climberKey]
+                );
+                damage += countToAdd * 20; // 每條路線20點傷害
+
+                // 更新計數器
+                dailyClimbCounter[climberKey] += countToAdd;
+              }
+
+              // 如果是主場館，額外扣100血
+              if (record.isHomeGym) {
+                damage += 100;
+              }
+
+              // 更新城堡血量
+              const currentHP = parseInt(castle.HP);
+              castle.HP = Math.max(0, currentHP - damage).toString();
+
+              console.log(
+                `${record.CLMBR_NM} 在 ${record.GYM_NM} 造成 ${damage} 點傷害，剩餘血量: ${castle.HP}`
+              );
+            } else {
+              console.log(
+                `${record.CLMBR_NM} 當天在 ${record.GYM_NM} 已達到攀爬上限5條，不再造成傷害`
+              );
+            }
+          } else {
+            console.log(
+              `${record.CLMBR_NM} 的攀爬記錄日期 ${record.DATE} 早於城堡 ${record.GYM_NM} 的開放日期 ${castle.START_DATE}`
+            );
+          }
+        }
+      });
+
+      return Object.values(castleMap);
+    };
+
+    // 更新城堡血量
+    let updatedCastles = [];
+    if (processedCastles.length > 0 && processedClimbingRecords.length > 0) {
+      updatedCastles = processCastleAttacks(processedClimbingRecords, [
+        ...processedCastles,
+      ]);
+      console.log('更新後的城堡狀態:', updatedCastles);
+    } else {
+      updatedCastles = processedCastles;
+    }
+
     // 創建漸變色血條的輔助函數
     function createGradient(ctx, x, y, width, height, healthPercent) {
       const gradient = ctx.createLinearGradient(x, y, x + width, y);
@@ -324,451 +428,224 @@ const Castle = ({ data, period }) => {
       },
     ];
 
-    // 根據數據添加動態圖層
-    // 這裡只是示例，您可以根據實際數據結構調整
-    if (data && data.scores) {
-      // 取得分數
-      const score =
-        data.scores.reduce((total, item) => total + item.SCORE_TOTAL, 0) || 0;
+    // 基於固定的位置信息創建城堡位置映射
+    const castlePositionMap = {
+      'Tup Mingde': { x: 0.38, y: 0.32, cname: '原岩明德' },
+      'Corner Zhongshan': { x: 0.44, y: 0.44, cname: '角中山' },
+      'Tup Wanhua': { x: 0.2, y: 0.55, cname: '原岩萬華' },
+      'Corner Huashan': { x: 0.595, y: 0.515, cname: '角華山' },
+      'Tup Zhonghe': { x: 0.36, y: 0.675, cname: '原岩中和' },
+      'Tup A19': { x: 0.15, y: 0.81, cname: '原岩A19' },
+      'Tup Hsindian': { x: 0.61, y: 0.75, cname: '原岩新店' },
+      'Tup Nangang': { x: 0.86, y: 0.58, cname: '原岩南港' },
+    };
 
-      // 定義城堡位置和對應的標籤
-      const castles = [
-        { x: 0.2, y: 0.25, label: '經典-房間', health: 0.75 }, // 示例
-        { x: 0.4, y: 0.35, label: '樓層-房間', health: 0.9 },
-        { x: 0.35, y: 0.45, label: '樓層-房間', health: 0.6 },
-        { x: 0.65, y: 0.45, label: '樓層-房間', health: 0.8 },
-        { x: 0.8, y: 0.55, label: '樓層-房間', health: 0.4 },
-        { x: 0.15, y: 0.58, label: '樓層-房間', health: 0.85 },
-        { x: 0.4, y: 0.65, label: '樓層-房間', health: 0.3 },
-        { x: 0.2, y: 0.75, label: '樓層-房間', health: 0.5 },
-        { x: 0.4, y: 0.85, label: '樓層-房間', health: 0.7 },
-      ];
+    // 創建城堡位置數組
+    let castlePositions = [];
 
-      // 根據數據調整健康值
-      if (data.castleHealth) {
-        // 這裡可以使用真實數據替換模擬值
-        castles.forEach((castle, index) => {
-          if (data.castleHealth[index]) {
-            castle.health = data.castleHealth[index];
+    // 如果有城堡數據，根據數據創建位置
+    if (updatedCastles && updatedCastles.length > 0) {
+      console.log('使用城堡數據生成位置', updatedCastles);
+
+      castlePositions = updatedCastles
+        .map((castle) => {
+          // 獲取城堡ID和位置信息
+          const castleId = castle.CASTLE;
+          const positionInfo = castlePositionMap[castleId];
+
+          if (!positionInfo) {
+            console.warn(`找不到城堡 ${castleId} 的位置信息`);
+            return null;
           }
-        });
-      }
 
-      // 首先添加所有的背景和血條元素，讓它們在城堡圖片下方
-      castles.forEach((castle) => {
-        // 血條容器背景 - 深色半透明背景
-        layers.push({
-          type: 'customHealthBar',
-          x: castle.x - 0.06,
-          y: castle.y + 0.13,
-          w: 0.12,
-          h: 0.025,
-          health: castle.health,
-          render: (ctx, x, y, w, h, health) => {
-            // 計算健康百分比
-            const healthPercent = health.current / health.total;
+          // 獲取血量，設置為current，總血量固定為10000
+          const hp = parseInt(castle.HP);
 
-            // 1. 調整外發光效果 - 復古風格減少發光效果
-            ctx.shadowColor = getHealthColor(healthPercent);
-            ctx.shadowBlur = 3; // 減少發光強度
-            ctx.shadowOffsetX = 0;
-            ctx.shadowOffsetY = 0;
-
-            // 2. 繪製血條背景容器 - 更深沉的背景
-            ctx.fillStyle = 'rgba(48, 48, 48, 0.85)';
-            // 降低圓角矩形的圓度
-            ctx.beginPath();
-            const radius = h / 4; // 減少圓角半徑
-            ctx.moveTo(x + radius, y);
-            ctx.lineTo(x + w - radius, y);
-            ctx.arc(
-              x + w - radius,
-              y + radius,
-              radius,
-              -Math.PI / 2,
-              Math.PI / 2
-            );
-            ctx.lineTo(x + radius, y + h);
-            ctx.arc(x + radius, y + radius, radius, Math.PI / 2, -Math.PI / 2);
-            ctx.closePath();
-            ctx.fill();
-
-            // 重置陰影，避免影響其他元素
-            ctx.shadowBlur = 0;
-
-            // 3. 繪製血條邊框 - 復古風格邊框
-            ctx.strokeStyle = 'rgba(150, 150, 150, 0.8)';
-            ctx.lineWidth = 1.5;
-            ctx.stroke();
-
-            // 4. 繪製血條內部填充
-            // 計算血條實際寬度（稍微縮小內部區域）
-            const healthWidth = (w - 6) * healthPercent;
-
-            // 創建復古漸變填充
-            const gradient = createGradient(
-              ctx,
-              x + 3,
-              y + 3,
-              healthWidth,
-              h - 6,
-              healthPercent
-            );
-
-            // 繪製降低圓角的血條
-            ctx.fillStyle = gradient;
-
-            if (healthWidth > 0) {
-              ctx.beginPath();
-              const innerRadius = Math.max(1, (h - 6) / 4); // 降低內部圓角
-
-              if (healthWidth < innerRadius * 2) {
-                // 如果健康值太低，繪製部分圓角
-                ctx.moveTo(x + 3, y + h / 2);
-                ctx.arc(
-                  x + 3 + innerRadius,
-                  y + h / 2,
-                  healthWidth / 2,
-                  Math.PI / 2,
-                  -Math.PI / 2
-                );
-                ctx.arc(
-                  x + 3 + innerRadius,
-                  y + h / 2,
-                  healthWidth / 2,
-                  -Math.PI / 2,
-                  Math.PI / 2
-                );
-              } else {
-                // 正常繪製圓角血條
-                ctx.moveTo(x + 3 + innerRadius, y + 3);
-                ctx.lineTo(x + 3 + healthWidth - innerRadius, y + 3);
-                ctx.arc(
-                  x + 3 + healthWidth - innerRadius,
-                  y + h / 2,
-                  innerRadius,
-                  -Math.PI / 2,
-                  Math.PI / 2
-                );
-                ctx.lineTo(x + 3 + innerRadius, y + h - 3);
-                ctx.arc(
-                  x + 3 + innerRadius,
-                  y + h / 2,
-                  innerRadius,
-                  Math.PI / 2,
-                  -Math.PI / 2
-                );
-              }
-
-              ctx.closePath();
-              ctx.fill();
-
-              // 5. 添加更微妙的高光效果 - 復古風格減少高光
-              const highlightGradient = ctx.createLinearGradient(
-                x + 3,
-                y + 3,
-                x + 3,
-                y + h / 2
-              );
-              highlightGradient.addColorStop(0, 'rgba(255, 255, 255, 0.2)');
-              highlightGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
-
-              ctx.fillStyle = highlightGradient;
-              ctx.fill();
-
-              // 添加底部陰影效果增強復古感
-              const shadowGradient = ctx.createLinearGradient(
-                x + 3,
-                y + h / 2,
-                x + 3,
-                y + h - 3
-              );
-              shadowGradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
-              shadowGradient.addColorStop(1, 'rgba(0, 0, 0, 0.3)');
-
-              ctx.fillStyle = shadowGradient;
-              ctx.fill();
-            }
-
-            // 6. 復古風格的百分比文字
-            if (w > 30) {
-              // 計算並進位到千分之一的百分比
-              const percentText = `${Math.ceil(healthPercent * 100 * 10) / 10}%`;
-
-              ctx.fillStyle = 'rgba(255, 250, 205, 0.9)'; // 淡黃色
-              ctx.font = `bold ${Math.max(8, h * 0.7)}px monospace`; // 使用等寬字體更復古
-              ctx.textAlign = 'center';
-              ctx.textBaseline = 'middle';
-              ctx.fillText(percentText, x + w / 2, y + h / 2);
-
-              // 復古文字描邊
-              ctx.strokeStyle = 'rgba(0, 0, 0, 0.5)';
-              ctx.lineWidth = 0.5;
-              ctx.strokeText(percentText, x + w / 2, y + h / 2);
-            }
-          },
-        });
-      });
-
-      // 然後添加所有城堡圖片和標籤，讓它們在血條上方
-      castles.forEach((castle) => {
-        // 使用圓形代替城堡圖片進行測試
-        layers.push({
-          type: 'circle',
-          color: 'rgba(200, 200, 200, 0.9)',
-          x: castle.x,
-          y: castle.y + 0.05,
-          radius: 0.04,
-        });
-
-        // 在繪製圖片時將標籤信息傳遞給繪製函數
-        layers.push({
-          type: 'label',
-          text: castle.label,
-          color: '#FF00FF', // 亮粉色
-          x: castle.x,
-          y: castle.y + 0.11,
-          size: 0.02,
-        });
-      });
+          // 返回完整的城堡位置信息
+          return {
+            x: positionInfo.x,
+            y: positionInfo.y,
+            health: {
+              current: hp,
+              total: castle.ORIGINAL_HP ? parseInt(castle.ORIGINAL_HP) : hp,
+            },
+            cname: positionInfo.cname,
+            castleId: castleId,
+          };
+        })
+        .filter((castle) => castle !== null); // 過濾掉null值
     } else {
-      // 如果沒有數據，添加一些測試元素
-      console.log('No data available, adding test elements');
+      // 如果沒有數據，使用默認值
+      console.log('使用默認城堡位置');
+      castlePositions = Object.entries(castlePositionMap).map(
+        ([castleId, info]) => ({
+          x: info.x,
+          y: info.y,
+          health: { current: 10000, total: 10000 },
+          cname: info.cname,
+          castleId: castleId,
+        })
+      );
+    }
 
-      // 添加測試用的城堡和血條
-      const testPositions = [
-        {
-          x: 0.38,
-          y: 0.32,
-          health: { current: 8000, total: 10000 },
-          cname: '原岩明德',
-          castleId: 'Tup Mingde',
-        },
-        {
-          x: 0.44,
-          y: 0.44,
-          health: { current: 7500, total: 10000 },
-          cname: '角中山',
-          castleId: 'Corner Zhongshan',
-        },
-        {
-          x: 0.2,
-          y: 0.55,
-          health: { current: 6000, total: 10000 },
-          cname: '原岩萬華',
-          castleId: 'Tup Wanhua',
-        },
-        {
-          x: 0.595,
-          y: 0.515,
-          health: { current: 9000, total: 10000 },
-          cname: '角華山',
-          castleId: 'Corner Huashan',
-        },
-        {
-          x: 0.36,
-          y: 0.675,
-          health: { current: 4500, total: 10000 },
-          cname: '原岩中和',
-          castleId: 'Tup Zhonghe',
-        },
-        {
-          x: 0.15,
-          y: 0.81,
-          health: { current: 15, total: 10000 },
-          cname: '原岩A19',
-          castleId: 'Tup A19',
-        },
-        {
-          x: 0.61,
-          y: 0.75,
-          health: { current: 5000, total: 10000 },
-          cname: '原岩新店',
-          castleId: 'Tup Hsindian',
-        },
-        {
-          x: 0.86,
-          y: 0.58,
-          health: { current: 2000, total: 10000 },
-          cname: '原岩南港',
-          castleId: 'Tup Nangang',
-        },
-      ];
+    // 更新城堡位置參考
+    castlePositionsRef.current = castlePositions;
+    console.log('最終的城堡位置:', castlePositions);
 
-      // 更新城堡位置參考
-      castlePositionsRef.current = testPositions;
+    castlePositions.forEach((pos) => {
+      // 使用自定義血條
+      layers.push({
+        type: 'customHealthBar',
+        x: pos.x - 0.06,
+        y: pos.y + 0.08,
+        w: 0.12,
+        h: 0.025,
+        health: pos.health,
+        render: (ctx, x, y, w, h, health) => {
+          // 計算健康百分比
+          const healthPercent = health.current / health.total;
 
-      // 根據處理後的城堡記錄更新城堡血量
-      if (processedCastles.length > 0) {
-        testPositions.forEach((position) => {
-          const castleRecord = processedCastles.find(
-            (record) => record.CASTLE === position.castleId
+          // 1. 調整外發光效果 - 復古風格減少發光效果
+          ctx.shadowColor = getHealthColor(healthPercent);
+          ctx.shadowBlur = 3; // 減少發光強度
+          ctx.shadowOffsetX = 0;
+          ctx.shadowOffsetY = 0;
+
+          // 2. 繪製血條背景容器 - 更深沉的背景
+          ctx.fillStyle = 'rgba(48, 48, 48, 0.85)';
+          // 降低圓角矩形的圓度
+          ctx.beginPath();
+          const radius = h / 4; // 減少圓角半徑
+          ctx.moveTo(x + radius, y);
+          ctx.lineTo(x + w - radius, y);
+          ctx.arc(
+            x + w - radius,
+            y + radius,
+            radius,
+            -Math.PI / 2,
+            Math.PI / 2
           );
-          if (castleRecord) {
-            position.health.current = parseInt(castleRecord.HP);
-            // 確保當前血量不超過總血量
-            if (position.health.current > position.health.total) {
-              position.health.total = position.health.current;
-            }
-          }
-        });
-      }
+          ctx.lineTo(x + radius, y + h);
+          ctx.arc(x + radius, y + radius, radius, Math.PI / 2, -Math.PI / 2);
+          ctx.closePath();
+          ctx.fill();
 
-      testPositions.forEach((pos) => {
-        // 使用自定義血條
-        layers.push({
-          type: 'customHealthBar',
-          x: pos.x - 0.06,
-          y: pos.y + 0.08,
-          w: 0.12,
-          h: 0.025,
-          health: pos.health,
-          render: (ctx, x, y, w, h, health) => {
-            // 計算健康百分比
-            const healthPercent = health.current / health.total;
+          // 重置陰影，避免影響其他元素
+          ctx.shadowBlur = 0;
 
-            // 1. 調整外發光效果 - 復古風格減少發光效果
-            ctx.shadowColor = getHealthColor(healthPercent);
-            ctx.shadowBlur = 3; // 減少發光強度
-            ctx.shadowOffsetX = 0;
-            ctx.shadowOffsetY = 0;
+          // 3. 繪製血條邊框 - 復古風格邊框
+          ctx.strokeStyle = 'rgba(150, 150, 150, 0.8)';
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
 
-            // 2. 繪製血條背景容器 - 更深沉的背景
-            ctx.fillStyle = 'rgba(48, 48, 48, 0.85)';
-            // 降低圓角矩形的圓度
+          // 4. 繪製血條內部填充
+          // 計算血條實際寬度（稍微縮小內部區域）
+          const healthWidth = (w - 6) * healthPercent;
+
+          // 創建復古漸變填充
+          const gradient = createGradient(
+            ctx,
+            x + 3,
+            y + 3,
+            healthWidth,
+            h - 6,
+            healthPercent
+          );
+
+          // 繪製降低圓角的血條
+          ctx.fillStyle = gradient;
+
+          if (healthWidth > 0) {
             ctx.beginPath();
-            const radius = h / 4; // 減少圓角半徑
-            ctx.moveTo(x + radius, y);
-            ctx.lineTo(x + w - radius, y);
-            ctx.arc(
-              x + w - radius,
-              y + radius,
-              radius,
-              -Math.PI / 2,
-              Math.PI / 2
-            );
-            ctx.lineTo(x + radius, y + h);
-            ctx.arc(x + radius, y + radius, radius, Math.PI / 2, -Math.PI / 2);
+            const innerRadius = Math.max(1, (h - 6) / 4); // 降低內部圓角
+
+            if (healthWidth < innerRadius * 2) {
+              // 如果健康值太低，繪製部分圓角
+              ctx.moveTo(x + 3, y + h / 2);
+              ctx.arc(
+                x + 3 + innerRadius,
+                y + h / 2,
+                healthWidth / 2,
+                Math.PI / 2,
+                -Math.PI / 2
+              );
+              ctx.arc(
+                x + 3 + innerRadius,
+                y + h / 2,
+                healthWidth / 2,
+                -Math.PI / 2,
+                Math.PI / 2
+              );
+            } else {
+              // 正常繪製圓角血條
+              ctx.moveTo(x + 3 + innerRadius, y + 3);
+              ctx.lineTo(x + 3 + healthWidth - innerRadius, y + 3);
+              ctx.arc(
+                x + 3 + healthWidth - innerRadius,
+                y + h / 2,
+                innerRadius,
+                -Math.PI / 2,
+                Math.PI / 2
+              );
+              ctx.lineTo(x + 3 + innerRadius, y + h - 3);
+              ctx.arc(
+                x + 3 + innerRadius,
+                y + h / 2,
+                innerRadius,
+                Math.PI / 2,
+                -Math.PI / 2
+              );
+            }
+
             ctx.closePath();
             ctx.fill();
 
-            // 重置陰影，避免影響其他元素
-            ctx.shadowBlur = 0;
-
-            // 3. 繪製血條邊框 - 復古風格邊框
-            ctx.strokeStyle = 'rgba(150, 150, 150, 0.8)';
-            ctx.lineWidth = 1.5;
-            ctx.stroke();
-
-            // 4. 繪製血條內部填充
-            // 計算血條實際寬度（稍微縮小內部區域）
-            const healthWidth = (w - 6) * healthPercent;
-
-            // 創建復古漸變填充
-            const gradient = createGradient(
-              ctx,
+            // 5. 添加更微妙的高光效果 - 復古風格減少高光
+            const highlightGradient = ctx.createLinearGradient(
               x + 3,
               y + 3,
-              healthWidth,
-              h - 6,
-              healthPercent
+              x + 3,
+              y + h / 2
             );
+            highlightGradient.addColorStop(0, 'rgba(255, 255, 255, 0.2)');
+            highlightGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
 
-            // 繪製降低圓角的血條
-            ctx.fillStyle = gradient;
+            ctx.fillStyle = highlightGradient;
+            ctx.fill();
 
-            if (healthWidth > 0) {
-              ctx.beginPath();
-              const innerRadius = Math.max(1, (h - 6) / 4); // 降低內部圓角
+            // 添加底部陰影效果增強復古感
+            const shadowGradient = ctx.createLinearGradient(
+              x + 3,
+              y + h / 2,
+              x + 3,
+              y + h - 3
+            );
+            shadowGradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
+            shadowGradient.addColorStop(1, 'rgba(0, 0, 0, 0.3)');
 
-              if (healthWidth < innerRadius * 2) {
-                // 如果健康值太低，繪製部分圓角
-                ctx.moveTo(x + 3, y + h / 2);
-                ctx.arc(
-                  x + 3 + innerRadius,
-                  y + h / 2,
-                  healthWidth / 2,
-                  Math.PI / 2,
-                  -Math.PI / 2
-                );
-                ctx.arc(
-                  x + 3 + innerRadius,
-                  y + h / 2,
-                  healthWidth / 2,
-                  -Math.PI / 2,
-                  Math.PI / 2
-                );
-              } else {
-                // 正常繪製圓角血條
-                ctx.moveTo(x + 3 + innerRadius, y + 3);
-                ctx.lineTo(x + 3 + healthWidth - innerRadius, y + 3);
-                ctx.arc(
-                  x + 3 + healthWidth - innerRadius,
-                  y + h / 2,
-                  innerRadius,
-                  -Math.PI / 2,
-                  Math.PI / 2
-                );
-                ctx.lineTo(x + 3 + innerRadius, y + h - 3);
-                ctx.arc(
-                  x + 3 + innerRadius,
-                  y + h / 2,
-                  innerRadius,
-                  Math.PI / 2,
-                  -Math.PI / 2
-                );
-              }
+            ctx.fillStyle = shadowGradient;
+            ctx.fill();
+          }
 
-              ctx.closePath();
-              ctx.fill();
+          // 6. 復古風格的百分比文字
+          if (w > 30) {
+            // 計算並進位到千分之一的百分比
+            const percentText = `${Math.ceil(healthPercent * 100 * 10) / 10}%`;
 
-              // 5. 添加更微妙的高光效果 - 復古風格減少高光
-              const highlightGradient = ctx.createLinearGradient(
-                x + 3,
-                y + 3,
-                x + 3,
-                y + h / 2
-              );
-              highlightGradient.addColorStop(0, 'rgba(255, 255, 255, 0.2)');
-              highlightGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+            ctx.fillStyle = 'rgba(255, 250, 205, 0.9)'; // 淡黃色
+            ctx.font = `bold ${Math.max(8, h * 0.7)}px monospace`; // 使用等寬字體更復古
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(percentText, x + w / 2, y + h / 2);
 
-              ctx.fillStyle = highlightGradient;
-              ctx.fill();
-
-              // 添加底部陰影效果增強復古感
-              const shadowGradient = ctx.createLinearGradient(
-                x + 3,
-                y + h / 2,
-                x + 3,
-                y + h - 3
-              );
-              shadowGradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
-              shadowGradient.addColorStop(1, 'rgba(0, 0, 0, 0.3)');
-
-              ctx.fillStyle = shadowGradient;
-              ctx.fill();
-            }
-
-            // 6. 復古風格的百分比文字
-            if (w > 30) {
-              // 計算並進位到千分之一的百分比
-              const percentText = `${Math.ceil(healthPercent * 100 * 10) / 10}%`;
-
-              ctx.fillStyle = 'rgba(255, 250, 205, 0.9)'; // 淡黃色
-              ctx.font = `bold ${Math.max(8, h * 0.7)}px monospace`; // 使用等寬字體更復古
-              ctx.textAlign = 'center';
-              ctx.textBaseline = 'middle';
-              ctx.fillText(percentText, x + w / 2, y + h / 2);
-
-              // 復古文字描邊
-              ctx.strokeStyle = 'rgba(0, 0, 0, 0.5)';
-              ctx.lineWidth = 0.5;
-              ctx.strokeText(percentText, x + w / 2, y + h / 2);
-            }
-          },
-        });
+            // 復古文字描邊
+            ctx.strokeStyle = 'rgba(0, 0, 0, 0.5)';
+            ctx.lineWidth = 0.5;
+            ctx.strokeText(percentText, x + w / 2, y + h / 2);
+          }
+        },
       });
-    }
+    });
 
     // 根據健康值獲取顏色 - 統一使用紅色系
     function getHealthColor(healthPercent) {

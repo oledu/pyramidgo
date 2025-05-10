@@ -22,7 +22,7 @@ const Lottie = dynamic(() => import('lottie-react'), {
 });
 
 const DataCharts = ({ data, loading, error, onPeriodChange }) => {
-  const [activeTab, setActiveTab] = useState('rules');
+  const [activeTab, setActiveTab] = useState('overview');
   const [currentPeriod, setCurrentPeriod] = useState('202504T');
 
   console.log('data', data);
@@ -54,9 +54,9 @@ const DataCharts = ({ data, loading, error, onPeriodChange }) => {
   // let teamPompom = pompom.
 
   const tabs = [
-    // { id: 'overview', name: '總覽' },
-    // { id: 'castle', name: '岩城尋寶' },
-    // { id: 'rules', name: '岩城尋寶規則' },
+    { id: 'overview', name: '總覽' },
+    { id: 'castle', name: '岩城尋寶' },
+    { id: 'rules', name: '岩城尋寶規則' },
   ];
 
   const isFragment =

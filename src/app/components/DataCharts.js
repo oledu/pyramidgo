@@ -10,6 +10,7 @@ import IndividualSpScoreStackBarChart from './IndividualSpScoreStackBarChart';
 import IndividualBldScoreStackBarChart from './IndividualBldScoreStackBarChart';
 import ClimbingDotChart from './ClimbingDotChart';
 import FragmentListChart from './FragmentListChart';
+import Castle from './Castle';
 // import Lottie from 'lottie-react';
 import dynamic from 'next/dynamic';
 import climbingAnimation from '../animations/climbing.json';
@@ -53,6 +54,7 @@ const DataCharts = ({ data, loading, error, onPeriodChange }) => {
     { id: 'individualBld', name: '抱石' },
     { id: 'individualSp', name: '上攀' },
     { id: 'climbing', name: '攀爬日記' },
+    { id: 'castle', name: '攻城戰' },
   ];
 
   const isFragment =
@@ -119,6 +121,15 @@ const DataCharts = ({ data, loading, error, onPeriodChange }) => {
                   >
                     <div className="grid grid-cols-1 3xl:grid-cols-2 gap-4">
                       <div className="space-y-4">
+                        <div
+                          style={{
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            borderRadius: '8px',
+                          }}
+                          className="p-2"
+                        >
+                          <Castle data={data} period={currentPeriod} />
+                        </div>
                         <div
                           style={{
                             backgroundColor: 'rgba(0, 0, 0, 0.8)',
@@ -247,7 +258,6 @@ const DataCharts = ({ data, loading, error, onPeriodChange }) => {
                 </div>
               </div>
             )}
-
             {activeTab === 'individualSp' && (
               <div
                 style={{
@@ -321,6 +331,11 @@ const DataCharts = ({ data, loading, error, onPeriodChange }) => {
                 }}
               >
                 <ClimbingDotChart data={scores} period={currentPeriod} />
+              </div>
+            )}
+            {activeTab === 'castle' && (
+              <div>
+                <Castle data={data} period={currentPeriod} />
               </div>
             )}
           </>

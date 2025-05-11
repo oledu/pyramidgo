@@ -81,59 +81,6 @@ const Castle = ({ data, period }) => {
     };
   }, [dimensions]);
 
-  // 鼠標懸停效果
-  useEffect(() => {
-    if (!canvasRef.current) return;
-
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-
-    // 記錄原始繪圖函數的參考
-    const originalDrawImages = canvas._drawImages;
-
-    // 當前懸停的城堡
-    let hoveredCastle = null;
-
-    // 鼠標移動事件處理
-    const handleMouseMove = (event) => {
-      if (!canvas) return;
-
-      const rect = canvas.getBoundingClientRect();
-      const x = (event.clientX - rect.left) / rect.width;
-      const y = (event.clientY - rect.top) / rect.height;
-
-      // 檢查是否懸停在任何城堡上
-      const castle = castlePositionsRef.current.find((castle) => {
-        const dx = x - castle.x;
-        const dy = y - castle.y;
-        const distance = Math.sqrt(dx * dx + dy * dy);
-        return distance < 0.08; // 使用與點擊相同的範圍
-      });
-
-      // 改變鼠標指針樣式
-      if (castle) {
-        canvas.style.cursor = 'pointer';
-      } else {
-        canvas.style.cursor = 'default';
-      }
-
-      // 如果懸停城堡發生變化，重繪Canvas
-      if (castle !== hoveredCastle) {
-        hoveredCastle = castle;
-        // 重繪Canvas以顯示懸停效果
-        if (typeof originalDrawImages === 'function') {
-          originalDrawImages(hoveredCastle);
-        }
-      }
-    };
-
-    canvas.addEventListener('mousemove', handleMouseMove);
-
-    return () => {
-      canvas.removeEventListener('mousemove', handleMouseMove);
-    };
-  }, [dimensions]);
-
   // 繪製重疊圖片
   useEffect(() => {
     if (dimensions.width === 0 || !canvasRef.current) return;
@@ -710,7 +657,7 @@ const Castle = ({ data, period }) => {
     }
 
     // 繪製所有圖層
-    const drawImages = async (hoveredCastle = null) => {
+    const drawImages = async () => {
       // 清除畫布
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -737,39 +684,7 @@ const Castle = ({ data, period }) => {
               layer.health
             );
           } else if (layer.type === 'circle') {
-            // 使用圓形代替城堡圖示，並處理懸停效果
-            const isCastleHovered =
-              hoveredCastle &&
-              hoveredCastle.x === layer.x &&
-              hoveredCastle.y === layer.y;
-
-            // 如果正在懸停，繪製較大的提示圓圈
-            if (isCastleHovered) {
-              // 繪製外圍提示環
-              ctx.beginPath();
-              ctx.arc(
-                layer.x * canvas.width,
-                layer.y * canvas.height,
-                layer.radius * 1.5 * canvas.width,
-                0,
-                Math.PI * 2
-              );
-              ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-              ctx.fill();
-
-              // 繪製內部提示陰影
-              ctx.beginPath();
-              ctx.arc(
-                layer.x * canvas.width,
-                layer.y * canvas.height,
-                layer.radius * 1.2 * canvas.width,
-                0,
-                Math.PI * 2
-              );
-              ctx.fillStyle = 'rgba(255, 100, 100, 0.5)';
-              ctx.fill();
-            }
-
+            // 使用圓形代替城堡圖示，移除懸停效果相關代碼
             // 繪製原始圓形
             ctx.beginPath();
             ctx.arc(
@@ -780,10 +695,8 @@ const Castle = ({ data, period }) => {
               Math.PI * 2
             );
 
-            // 如果正在懸停，使用更亮的顏色
-            ctx.fillStyle = isCastleHovered
-              ? 'rgba(255, 200, 200, 0.9)'
-              : layer.color;
+            // 使用標準顏色
+            ctx.fillStyle = layer.color;
             ctx.fill();
           } else if (layer.type === 'castle') {
             // 繪製復古風格城堡
@@ -842,9 +755,6 @@ const Castle = ({ data, period }) => {
         setIsLoading(false);
       }
     };
-
-    // 保存繪圖函數引用以便懸停效果使用
-    canvas._drawImages = drawImages;
 
     drawImages();
   }, [dimensions, data, period]);

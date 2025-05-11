@@ -231,6 +231,8 @@ const Castle = ({ data, period, scoresNoLimitsGymDate }) => {
       }
       // 初始化每個城堡的攻擊者貢獻統計
       map[castle.CASTLE].attackers = {};
+      // 初始化攻擊次數
+      map[castle.CASTLE].attackCount = 0;
       return map;
     }, {});
 
@@ -246,6 +248,8 @@ const Castle = ({ data, period, scoresNoLimitsGymDate }) => {
 
     // 為了記錄每位攀岩者的主場館，創建一個映射
     const climberHomeGymMap = {};
+
+    // 只处理climbingRecords中的主场馆信息，不再修改mainAttackers
     climbingRecords.forEach((record) => {
       if (record.isHomeGym && record.CLMBR_NM && record.GYM_NM) {
         climberHomeGymMap[`${record.CLMBR_NM}-${record.GYM_NM}`] = true;
@@ -292,6 +296,9 @@ const Castle = ({ data, period, scoresNoLimitsGymDate }) => {
                   }
                   castle.attackers[climberName] += damage;
 
+                  // 统计攻击次数 - 每个日期计为一次攻击
+                  castle.attackCount++;
+
                   console.log(
                     `${climberName} 在 ${gymName} (${date}) 造成 ${damage} 點傷害，剩餘血量: ${castle.HP}`
                   );
@@ -330,9 +337,35 @@ const Castle = ({ data, period, scoresNoLimitsGymDate }) => {
         data.castle_participants
       );
       console.log('處理後的參與者記錄:', processedParticipants);
+
+      // 预处理每个城堡的主攻玩家
+      const castleMainAttackers = {};
+      processedParticipants.forEach((participant) => {
+        if (participant.HOME_GYM) {
+          if (!castleMainAttackers[participant.HOME_GYM]) {
+            castleMainAttackers[participant.HOME_GYM] = [];
+          }
+          if (
+            !castleMainAttackers[participant.HOME_GYM].includes(
+              participant.CLMBR_NM
+            )
+          ) {
+            castleMainAttackers[participant.HOME_GYM].push(
+              participant.CLMBR_NM
+            );
+          }
+        }
+      });
+
+      // 将预处理的主攻玩家添加到各个城堡
+      if (processedCastles.length > 0) {
+        processedCastles.forEach((castle) => {
+          castle.mainAttackers = castleMainAttackers[castle.CASTLE] || [];
+        });
+      }
     }
 
-    // 處理攀岩記錄
+    // 处理攀岩记录
     let processedClimbingRecords = [];
     if (data.climbRecords) {
       processedClimbingRecords = processClimbingRecordsWithParticipants(
@@ -342,10 +375,10 @@ const Castle = ({ data, period, scoresNoLimitsGymDate }) => {
       console.log('處理後的攀岩記錄:', processedClimbingRecords);
     }
 
-    // 更新城堡血量 - 只在有新數據時執行
+    // 更新城堡血量 - 只在有新数据时执行
     let updatedCastles = [];
     if (processedCastles.length > 0 && processedClimbingRecords.length > 0) {
-      // 深度複製城堡數據，避免直接修改原始數據
+      // 深度复制城堡数据，避免直接修改原始数据
       updatedCastles = processCastleAttacks(
         processedClimbingRecords,
         JSON.parse(JSON.stringify(processedCastles)),
@@ -360,14 +393,14 @@ const Castle = ({ data, period, scoresNoLimitsGymDate }) => {
       setCastlesData(processedCastles);
     }
 
-    // 保存處理過的數據到ref中
+    // 保存处理过的数据到ref中
     processedDataRef.current = {
       processedCastles: updatedCastles,
       processedParticipants,
       processedClimbingRecords,
     };
 
-    // 標記數據已處理 - 確保只有數據或期間改變時才重新處理
+    // 标记数据已处理 - 确保只有数据或期间改变时才重新处理
     setDataProcessed(true);
   }, [data, period, scoresNoLimitsGymDate]); // 添加 scoresNoLimitsGymDate 作為依賴
 
@@ -824,8 +857,11 @@ const Castle = ({ data, period, scoresNoLimitsGymDate }) => {
               ✕
             </button>
 
-            <h2 className="text-xl font-bold text-red-500">
-              {selectedCastle.cname}
+            <h2 className="font-bold text-center">
+              <div className="text-red-400 text-lg">岩城</div>
+              <div className="text-red-500 text-2xl mt-1">
+                {selectedCastle.cname}
+              </div>
             </h2>
 
             {/* 添加城堡圖片 */}
@@ -847,51 +883,51 @@ const Castle = ({ data, period, scoresNoLimitsGymDate }) => {
               </div>
               <p className="text-white">
                 血量: {selectedCastle.health.current} /{' '}
-                {selectedCastle.health.total}(
-                {(() => {
-                  // 安全計算百分比，確保使用正確的數值
-                  const current = Number.isFinite(selectedCastle.health.current)
-                    ? selectedCastle.health.current
-                    : 0;
-                  const total =
-                    Number.isFinite(selectedCastle.health.total) &&
-                    selectedCastle.health.total > 0
-                      ? selectedCastle.health.total
-                      : 1;
-                  // 顯示到小數點後1位
-                  return Math.ceil((current / total) * 1000) / 10;
-                })()}
-                %)
+                {selectedCastle.health.total}
               </p>
             </div>
 
             <div className="grid grid-cols-2 gap-3 mb-4">
               <div className="bg-gray-800 p-3 rounded">
-                <p className="text-gray-400 text-sm">攻擊力</p>
-                <p className="text-white font-bold">1200</p>
+                <p className="text-gray-400 text-sm">主攻軍團</p>
+                <p className="text-white font-bold">
+                  {(() => {
+                    // 直接使用城堡的主攻玩家数量
+                    const castle = castlesData.find(
+                      (c) => c.CASTLE === selectedCastle.castleId
+                    );
+                    if (!castle) return 0;
+
+                    return castle.mainAttackers?.length || 0;
+                  })()}
+                  人
+                </p>
               </div>
               <div className="bg-gray-800 p-3 rounded">
-                <p className="text-gray-400 text-sm">防禦力</p>
-                <p className="text-white font-bold">850</p>
-              </div>
-              <div className="bg-gray-800 p-3 rounded">
-                <p className="text-gray-400 text-sm">人口</p>
-                <p className="text-white font-bold">5000</p>
-              </div>
-              <div className="bg-gray-800 p-3 rounded">
-                <p className="text-gray-400 text-sm">資源</p>
-                <p className="text-white font-bold">10500</p>
+                <p className="text-gray-400 text-sm">被攻擊次數</p>
+                <p className="text-white font-bold">
+                  {(() => {
+                    // 直接使用城堡的攻击次数
+                    const castle = castlesData.find(
+                      (c) => c.CASTLE === selectedCastle.castleId
+                    );
+                    if (!castle) return 0;
+
+                    return castle.attackCount || 0;
+                  })()}
+                  次
+                </p>
               </div>
             </div>
 
-            {/* 添加攻擊者貢獻榜 */}
+            {/* 添加攻城英雄榜 */}
             {selectedCastle &&
               castlesData &&
               castlesData.find((c) => c.CASTLE === selectedCastle.castleId)
                 ?.attackers && (
                 <div className="mt-4">
                   <h3 className="text-lg font-bold text-yellow-400 mb-2">
-                    攻擊者貢獻榜
+                    攻城英雄榜
                   </h3>
                   <div className="bg-gray-800 p-3 rounded">
                     {Object.entries(
@@ -928,15 +964,31 @@ const Castle = ({ data, period, scoresNoLimitsGymDate }) => {
                             </span>
                           </div>
                           <span className="font-bold text-red-400">
-                            {damage} 點
+                            {damage} 🩸
                           </span>
                         </div>
                       ))}
                   </div>
 
                   <div className="mt-2 text-xs text-gray-400 text-left">
-                    <p>• 扣血量等同於攀爬者在該健身房的得分</p>
-                    <p>• 在主場館攀爬每日額外造成 100 點傷害</p>
+                    <p className="font-bold text-yellow-300 mb-1">［岩城］</p>
+                    <p>• 爬掉路線獲得積分，造成岩城扣血。</p>
+                    <p>• 在該岩館收線得到的「積分」 = 岩城「扣血量」。</p>
+                    <p>
+                      •
+                      當岩城被攻破（=岩城血條歸零），即依個人攻城貢獻機率掉寶！
+                    </p>
+                    <p className="mt-2 font-bold text-yellow-300 mb-1">
+                      ［探索岩場］
+                    </p>
+                    <p>• 沒有血條，每兩週發出獎賞。</p>
+                    <p className="mt-2 text-yellow-400">
+                      ⚡ 在你的主攻岩館收線，每日攻擊加成 100滴血！
+                    </p>
+                    <p className="text-yellow-400">
+                      ⚡
+                      當你所選的主攻岩館被打爆，將獲得主要分紅！其他冒險者一樣可助攻其他岩城、獲得小獎勵。
+                    </p>
                   </div>
                 </div>
               )}

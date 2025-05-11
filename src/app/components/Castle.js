@@ -11,8 +11,6 @@ const Castle = ({ data, period }) => {
     return null;
   }
 
-  console.log('dataCastle', data);
-
   const containerRef = useRef(null);
   const canvasRef = useRef(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
@@ -21,6 +19,12 @@ const Castle = ({ data, period }) => {
   const [showModal, setShowModal] = useState(false);
   const castlePositionsRef = useRef([]);
   const [castlesData, setCastlesData] = useState([]);
+  const processedDataRef = useRef({
+    processedCastles: [],
+    processedParticipants: [],
+    processedClimbingRecords: [],
+  });
+  const [dataProcessed, setDataProcessed] = useState(false);
 
   // 根據容器設置 Canvas 尺寸
   useEffect(() => {
@@ -64,6 +68,8 @@ const Castle = ({ data, period }) => {
       });
 
       if (clickedCastle) {
+        console.log('clickedCastle', clickedCastle);
+
         setSelectedCastle(clickedCastle);
         setShowModal(true);
       }
@@ -81,9 +87,283 @@ const Castle = ({ data, period }) => {
     };
   }, [dimensions]);
 
-  // 繪製重疊圖片
+  // 處理城堡記錄數據，找出每個城堡最新的記錄
+  const processLatestCastleRecords = (records) => {
+    if (!records || !Array.isArray(records) || records.length === 0) return [];
+
+    // 使用reduce方法一次性處理所有記錄
+    // 創建一個對象，以城堡名稱為key，最新記錄為value
+    return Object.values(
+      records.reduce((latest, record) => {
+        const castle = record.CASTLE;
+        const currentDate = new Date(record.START_DATE);
+
+        // 如果這個城堡尚未記錄，或此記錄的日期比已存在的更新
+        if (
+          !latest[castle] ||
+          new Date(latest[castle].START_DATE) < currentDate
+        ) {
+          latest[castle] = record;
+          // 確保每次都保存原始血量字段，用於保存城堡初始血量
+          latest[castle].ORIGINAL_HP = record.HP;
+        }
+
+        return latest;
+      }, {})
+    );
+  };
+
+  // 處理城堡參與者數據，依據CLMBR_NM和HOME_GYM找出最新的記錄
+  const processLatestCastleParticipants = (participants) => {
+    if (
+      !participants ||
+      !Array.isArray(participants) ||
+      participants.length === 0
+    )
+      return [];
+
+    // 使用reduce方法處理所有參與者記錄
+    // 創建一個對象，以 "玩家名稱-主場館" 組合為key，最新記錄為value
+    return Object.values(
+      participants.reduce((latest, participant) => {
+        const key = `${participant.CLMBR_NM}-${participant.HOME_GYM}`;
+        const currentDate = new Date(participant.START_DATE);
+
+        // 如果這個組合尚未記錄，或此記錄的日期比已存在的更新
+        if (!latest[key] || new Date(latest[key].START_DATE) < currentDate) {
+          latest[key] = participant;
+        }
+
+        return latest;
+      }, {})
+    );
+  };
+
+  // 處理攀岩記錄並與參與者信息結合
+  const processClimbingRecordsWithParticipants = (
+    climbingRecords,
+    participants
+  ) => {
+    console.log(
+      'processClimbingRecordsWithParticipants',
+      climbingRecords,
+      participants
+    );
+
+    if (
+      !climbingRecords ||
+      !Array.isArray(climbingRecords) ||
+      climbingRecords.length === 0
+    ) {
+      return [];
+    }
+
+    // 只處理有效的攀岩記錄（需要有GYM_NM和DATE）
+    const validRecords = climbingRecords.filter(
+      (record) => record.GYM_NM && record.DATE
+    );
+
+    // 將參與者數據轉換為以CLMBR_NM為鍵的查找映射
+    const participantMap = participants.reduce((map, participant) => {
+      if (!map[participant.CLMBR_NM]) {
+        map[participant.CLMBR_NM] = [];
+      }
+      map[participant.CLMBR_NM].push(participant);
+      return map;
+    }, {});
+
+    // 處理每一條攀岩記錄
+    return validRecords.map((record) => {
+      // 獲取攀岩者的參與者記錄
+      const climberParticipants = participantMap[record.CLMBR_NM] || [];
+
+      // 格式化攀岩記錄的日期（添加年份）
+      const recordYear = '2025/'; // 假設記錄的年份是2025
+      const recordDate = new Date(recordYear + record.DATE);
+
+      // 尋找匹配的參與者記錄
+      const matchingParticipant = climberParticipants.find((participant) => {
+        // 檢查健身房是否匹配
+        const gymMatches = participant.HOME_GYM === record.GYM_NM;
+
+        // 檢查日期是否在範圍內
+        const startDate = new Date(participant.START_DATE);
+        const endDate = new Date(participant.END_DATE);
+        const dateInRange = recordDate >= startDate && recordDate <= endDate;
+
+        return gymMatches && dateInRange;
+      });
+
+      // 只添加isHomeGym標記，表示是否為主場館
+      return {
+        ...record,
+        isHomeGym: !!matchingParticipant, // 如果找到匹配的參與者記錄，則為主場館
+      };
+    });
+  };
+
+  // 計算並更新城堡血量
+  const processCastleAttacks = (climbingRecords, castles) => {
+    if (
+      !climbingRecords ||
+      !Array.isArray(climbingRecords) ||
+      climbingRecords.length === 0 ||
+      !castles ||
+      !Array.isArray(castles) ||
+      castles.length === 0
+    ) {
+      return castles;
+    }
+
+    console.log('計算城堡攻擊', climbingRecords, castles);
+
+    // 創建城堡映射表，以城堡名稱為索引
+    const castleMap = castles.reduce((map, castle) => {
+      map[castle.CASTLE] = castle;
+      // 確保每個城堡有原始HP值 - 如果不存在才賦值，防止覆蓋
+      if (!castle.ORIGINAL_HP) {
+        castle.ORIGINAL_HP = castle.HP;
+      }
+      // 初始化每個城堡的攻擊者貢獻統計
+      map[castle.CASTLE].attackers = {};
+      return map;
+    }, {});
+
+    // 為了確保每天每個攀岩者在每個健身房的攀爬記錄不超過5條
+    // 創建一個計數器: "攀岩者-日期-健身房" => 已計算的路線數
+    const dailyClimbCounter = {};
+
+    // 遍歷所有攀岩記錄，計算對城堡的傷害
+    climbingRecords.forEach((record) => {
+      // 確保記錄有健身房名稱且該健身房存在於城堡列表中
+      if (record.GYM_NM && castleMap[record.GYM_NM]) {
+        const castle = castleMap[record.GYM_NM];
+
+        // 檢查攀爬記錄時間是否在城堡的START_DATE之後
+        const recordYear = '2025/'; // 假設記錄的年份是2025
+        const recordDate = new Date(recordYear + record.DATE);
+        const castleStartDate = new Date(castle.START_DATE);
+
+        // 只處理城堡開放日期後的攀爬記錄
+        if (recordDate >= castleStartDate) {
+          let damage = 0;
+
+          // 計算攀爬記錄的指定日期在指定健身房的計數鍵
+          const climberKey = `${record.CLMBR_NM}-${record.DATE}-${record.GYM_NM}`;
+          dailyClimbCounter[climberKey] = dailyClimbCounter[climberKey] || 0;
+
+          // 如果該攀岩者當天在這個健身房的計數少於5，則計算傷害
+          if (dailyClimbCounter[climberKey] < 5) {
+            // 計算路線傷害
+            if (record.SENT_COUNT && !isNaN(parseInt(record.SENT_COUNT))) {
+              // 計算實際計入的路線數（考慮每日上限）
+              const countToAdd = Math.min(
+                parseInt(record.SENT_COUNT),
+                5 - dailyClimbCounter[climberKey]
+              );
+              damage += countToAdd * 20; // 每條路線20點傷害
+
+              // 更新計數器
+              dailyClimbCounter[climberKey] += countToAdd;
+            }
+
+            // 如果是主場館，額外扣100血
+            if (record.isHomeGym) {
+              damage += 100;
+            }
+
+            // 更新城堡血量
+            const currentHP = parseInt(castle.HP);
+            castle.HP = Math.max(0, currentHP - damage).toString();
+
+            // 記錄攀岩者對該城堡的貢獻
+            if (!castle.attackers[record.CLMBR_NM]) {
+              castle.attackers[record.CLMBR_NM] = 0;
+            }
+            castle.attackers[record.CLMBR_NM] += damage;
+
+            console.log(
+              `${record.CLMBR_NM} 在 ${record.GYM_NM} 造成 ${damage} 點傷害，剩餘血量: ${castle.HP}`
+            );
+          } else {
+            console.log(
+              `${record.CLMBR_NM} 當天在 ${record.GYM_NM} 已達到攀爬上限5條，不再造成傷害`
+            );
+          }
+        } else {
+          console.log(
+            `${record.CLMBR_NM} 的攀爬記錄日期 ${record.DATE} 早於城堡 ${record.GYM_NM} 的開放日期 ${castle.START_DATE}`
+          );
+        }
+      }
+    });
+
+    return Object.values(castleMap);
+  };
+
+  // 新增：單獨處理數據的useEffect，只在data或period變化時執行
   useEffect(() => {
-    if (dimensions.width === 0 || !canvasRef.current) return;
+    if (!data) return;
+
+    console.log('處理城堡數據...');
+
+    // 如果有數據，處理城堡記錄
+    let processedCastles = [];
+    if (data.castle_records) {
+      processedCastles = processLatestCastleRecords(data.castle_records);
+      console.log('處理後的城堡記錄:', processedCastles);
+    }
+
+    // 如果有參與者數據，處理參與者記錄
+    let processedParticipants = [];
+    if (data.castle_participants) {
+      processedParticipants = processLatestCastleParticipants(
+        data.castle_participants
+      );
+      console.log('處理後的參與者記錄:', processedParticipants);
+    }
+
+    // 處理攀岩記錄
+    let processedClimbingRecords = [];
+    if (data.climbRecords) {
+      processedClimbingRecords = processClimbingRecordsWithParticipants(
+        data.climbRecords,
+        processedParticipants
+      );
+      console.log('處理後的攀岩記錄:', processedClimbingRecords);
+    }
+
+    // 更新城堡血量 - 只在有新數據時執行
+    let updatedCastles = [];
+    if (processedCastles.length > 0 && processedClimbingRecords.length > 0) {
+      // 深度複製城堡數據，避免直接修改原始數據
+      updatedCastles = processCastleAttacks(
+        processedClimbingRecords,
+        JSON.parse(JSON.stringify(processedCastles))
+      );
+      console.log('更新後的城堡狀態:', updatedCastles);
+      setCastlesData(updatedCastles);
+    } else {
+      console.log('沒有更新城堡狀態', processedCastles);
+      console.log('沒有更新攀岩記錄', processedClimbingRecords);
+      updatedCastles = processedCastles;
+      setCastlesData(processedCastles);
+    }
+
+    // 保存處理過的數據到ref中
+    processedDataRef.current = {
+      processedCastles: updatedCastles,
+      processedParticipants,
+      processedClimbingRecords,
+    };
+
+    // 標記數據已處理 - 確保只有數據或期間改變時才重新處理
+    setDataProcessed(true);
+  }, [data, period]); // 只在數據或期間改變時重新處理
+
+  // 繪製重疊圖片，只依賴於 dimensions 和數據處理狀態
+  useEffect(() => {
+    if (dimensions.width === 0 || !canvasRef.current || !dataProcessed) return;
 
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
@@ -94,262 +374,11 @@ const Castle = ({ data, period }) => {
 
     setIsLoading(true);
 
-    // 處理城堡記錄數據，找出每個城堡最新的記錄
-    const processLatestCastleRecords = (records) => {
-      if (!records || !Array.isArray(records) || records.length === 0)
-        return [];
+    // 使用ref中存儲的處理好的數據，而不是重新處理
+    const { processedCastles } = processedDataRef.current;
 
-      // 使用reduce方法一次性處理所有記錄
-      // 創建一個對象，以城堡名稱為key，最新記錄為value
-      return Object.values(
-        records.reduce((latest, record) => {
-          const castle = record.CASTLE;
-          const currentDate = new Date(record.START_DATE);
-
-          // 如果這個城堡尚未記錄，或此記錄的日期比已存在的更新
-          if (
-            !latest[castle] ||
-            new Date(latest[castle].START_DATE) < currentDate
-          ) {
-            latest[castle] = record;
-            // 添加原始血量字段，用於保存城堡初始血量
-            latest[castle].ORIGINAL_HP = record.HP;
-          }
-
-          return latest;
-        }, {})
-      );
-    };
-
-    // 處理城堡參與者數據，依據CLMBR_NM和HOME_GYM找出最新的記錄
-    const processLatestCastleParticipants = (participants) => {
-      if (
-        !participants ||
-        !Array.isArray(participants) ||
-        participants.length === 0
-      )
-        return [];
-
-      // 使用reduce方法處理所有參與者記錄
-      // 創建一個對象，以 "玩家名稱-主場館" 組合為key，最新記錄為value
-      return Object.values(
-        participants.reduce((latest, participant) => {
-          const key = `${participant.CLMBR_NM}-${participant.HOME_GYM}`;
-          const currentDate = new Date(participant.START_DATE);
-
-          // 如果這個組合尚未記錄，或此記錄的日期比已存在的更新
-          if (!latest[key] || new Date(latest[key].START_DATE) < currentDate) {
-            latest[key] = participant;
-          }
-
-          return latest;
-        }, {})
-      );
-    };
-
-    // 如果有數據，處理城堡記錄
-    let processedCastles = [];
-    if (data && data.castle_records) {
-      processedCastles = processLatestCastleRecords(data.castle_records);
-      console.log('處理後的城堡記錄:', processedCastles);
-    }
-
-    // 如果有參與者數據，處理參與者記錄
-    let processedParticipants = [];
-    if (data && data.castle_participants) {
-      processedParticipants = processLatestCastleParticipants(
-        data.castle_participants
-      );
-      console.log('處理後的參與者記錄:', processedParticipants);
-    }
-
-    // 處理攀岩記錄並與參與者信息結合
-    const processClimbingRecordsWithParticipants = (
-      climbingRecords,
-      participants
-    ) => {
-      console.log(
-        'processClimbingRecordsWithParticipants',
-        climbingRecords,
-        participants
-      );
-
-      if (
-        !climbingRecords ||
-        !Array.isArray(climbingRecords) ||
-        climbingRecords.length === 0
-      ) {
-        return [];
-      }
-
-      // 只處理有效的攀岩記錄（需要有GYM_NM和DATE）
-      const validRecords = climbingRecords.filter(
-        (record) => record.GYM_NM && record.DATE
-      );
-
-      // 將參與者數據轉換為以CLMBR_NM為鍵的查找映射
-      const participantMap = participants.reduce((map, participant) => {
-        if (!map[participant.CLMBR_NM]) {
-          map[participant.CLMBR_NM] = [];
-        }
-        map[participant.CLMBR_NM].push(participant);
-        return map;
-      }, {});
-
-      // 處理每一條攀岩記錄
-      return validRecords.map((record) => {
-        // 獲取攀岩者的參與者記錄
-        const climberParticipants = participantMap[record.CLMBR_NM] || [];
-
-        // 格式化攀岩記錄的日期（添加年份）
-        const recordYear = '2025/'; // 假設記錄的年份是2025
-        const recordDate = new Date(recordYear + record.DATE);
-
-        // 尋找匹配的參與者記錄
-        const matchingParticipant = climberParticipants.find((participant) => {
-          // 檢查健身房是否匹配
-          const gymMatches = participant.HOME_GYM === record.GYM_NM;
-
-          // 檢查日期是否在範圍內
-          const startDate = new Date(participant.START_DATE);
-          const endDate = new Date(participant.END_DATE);
-          const dateInRange = recordDate >= startDate && recordDate <= endDate;
-
-          return gymMatches && dateInRange;
-        });
-
-        // 只添加isHomeGym標記，表示是否為主場館
-        return {
-          ...record,
-          isHomeGym: !!matchingParticipant, // 如果找到匹配的參與者記錄，則為主場館
-        };
-      });
-    };
-
-    // 處理攀岩記錄
-    let processedClimbingRecords = [];
-    if (data && data.climbRecords) {
-      processedClimbingRecords = processClimbingRecordsWithParticipants(
-        data.climbRecords,
-        processedParticipants
-      );
-      console.log('處理後的攀岩記錄:', processedClimbingRecords);
-    }
-
-    // 計算並更新城堡血量
-    const processCastleAttacks = (climbingRecords, castles) => {
-      if (
-        !climbingRecords ||
-        !Array.isArray(climbingRecords) ||
-        climbingRecords.length === 0 ||
-        !castles ||
-        !Array.isArray(castles) ||
-        castles.length === 0
-      ) {
-        return castles;
-      }
-
-      console.log('計算城堡攻擊', climbingRecords, castles);
-
-      // 創建城堡映射表，以城堡名稱為索引
-      const castleMap = castles.reduce((map, castle) => {
-        map[castle.CASTLE] = castle;
-        // 確保每個城堡有原始HP值
-        if (!castle.ORIGINAL_HP) {
-          castle.ORIGINAL_HP = castle.HP;
-        }
-        // 初始化每個城堡的攻擊者貢獻統計
-        map[castle.CASTLE].attackers = {};
-        return map;
-      }, {});
-
-      // 為了確保每天每個攀岩者在每個健身房的攀爬記錄不超過5條
-      // 創建一個計數器: "攀岩者-日期-健身房" => 已計算的路線數
-      const dailyClimbCounter = {};
-
-      // 遍歷所有攀岩記錄，計算對城堡的傷害
-      climbingRecords.forEach((record) => {
-        // 確保記錄有健身房名稱且該健身房存在於城堡列表中
-        if (record.GYM_NM && castleMap[record.GYM_NM]) {
-          const castle = castleMap[record.GYM_NM];
-
-          // 檢查攀爬記錄時間是否在城堡的START_DATE之後
-          const recordYear = '2025/'; // 假設記錄的年份是2025
-          const recordDate = new Date(recordYear + record.DATE);
-          const castleStartDate = new Date(castle.START_DATE);
-
-          // 只處理城堡開放日期後的攀爬記錄
-          if (recordDate >= castleStartDate) {
-            let damage = 0;
-
-            // 計算攀爬記錄的指定日期在指定健身房的計數鍵
-            const climberKey = `${record.CLMBR_NM}-${record.DATE}-${record.GYM_NM}`;
-            dailyClimbCounter[climberKey] = dailyClimbCounter[climberKey] || 0;
-
-            // 如果該攀岩者當天在這個健身房的計數少於5，則計算傷害
-            if (dailyClimbCounter[climberKey] < 5) {
-              // 計算路線傷害
-              if (record.SENT_COUNT && !isNaN(parseInt(record.SENT_COUNT))) {
-                // 計算實際計入的路線數（考慮每日上限）
-                const countToAdd = Math.min(
-                  parseInt(record.SENT_COUNT),
-                  5 - dailyClimbCounter[climberKey]
-                );
-                damage += countToAdd * 20; // 每條路線20點傷害
-
-                // 更新計數器
-                dailyClimbCounter[climberKey] += countToAdd;
-              }
-
-              // 如果是主場館，額外扣100血
-              if (record.isHomeGym) {
-                damage += 100;
-              }
-
-              // 更新城堡血量
-              const currentHP = parseInt(castle.HP);
-              castle.HP = Math.max(0, currentHP - damage).toString();
-
-              // 記錄攀岩者對該城堡的貢獻
-              if (!castle.attackers[record.CLMBR_NM]) {
-                castle.attackers[record.CLMBR_NM] = 0;
-              }
-              castle.attackers[record.CLMBR_NM] += damage;
-
-              console.log(
-                `${record.CLMBR_NM} 在 ${record.GYM_NM} 造成 ${damage} 點傷害，剩餘血量: ${castle.HP}`
-              );
-            } else {
-              console.log(
-                `${record.CLMBR_NM} 當天在 ${record.GYM_NM} 已達到攀爬上限5條，不再造成傷害`
-              );
-            }
-          } else {
-            console.log(
-              `${record.CLMBR_NM} 的攀爬記錄日期 ${record.DATE} 早於城堡 ${record.GYM_NM} 的開放日期 ${castle.START_DATE}`
-            );
-          }
-        }
-      });
-
-      return Object.values(castleMap);
-    };
-
-    // 更新城堡血量
-    let updatedCastles = [];
-    if (processedCastles.length > 0 && processedClimbingRecords.length > 0) {
-      updatedCastles = processCastleAttacks(processedClimbingRecords, [
-        ...processedCastles,
-      ]);
-      console.log('更新後的城堡狀態:', updatedCastles);
-      //   alert('更新後的城堡狀態:' + JSON.stringify(updatedCastles));
-      setCastlesData(updatedCastles);
-    } else {
-      console.log('沒有更新城堡狀態', processedCastles);
-      console.log('沒有更新攀岩記錄', updatedCastles);
-      updatedCastles = processedCastles;
-      setCastlesData(processedCastles);
-    }
+    // 直接使用處理好的城堡數據，不需要額外修改
+    const updatedCastles = processedCastles;
 
     // 創建漸變色血條的輔助函數
     function createGradient(ctx, x, y, width, height, healthPercent) {
@@ -388,6 +417,18 @@ const Castle = ({ data, period }) => {
       return gradient;
     }
 
+    // 基於固定的位置信息創建城堡位置映射
+    const castlePositionMap = {
+      'Tup Mingde': { x: 0.38, y: 0.32, cname: '原岩明德' },
+      'Corner Zhongshan': { x: 0.44, y: 0.44, cname: '角中山' },
+      'Tup Wanhua': { x: 0.2, y: 0.55, cname: '原岩萬華' },
+      'Corner Huashan': { x: 0.595, y: 0.515, cname: '角華山' },
+      'Tup Zhonghe': { x: 0.36, y: 0.675, cname: '原岩中和' },
+      'Tup A19': { x: 0.15, y: 0.81, cname: '原岩A19' },
+      'Tup Hsindian': { x: 0.61, y: 0.75, cname: '原岩新店' },
+      'Tup Nangang': { x: 0.86, y: 0.58, cname: '原岩南港' },
+    };
+
     // 這裡定義要繪製的圖層
     // 每個圖層包含：圖片路徑、透明度、相對坐標和尺寸
     const layers = [
@@ -400,18 +441,6 @@ const Castle = ({ data, period }) => {
         h: 1,
       },
     ];
-
-    // 基於固定的位置信息創建城堡位置映射
-    const castlePositionMap = {
-      'Tup Mingde': { x: 0.38, y: 0.32, cname: '原岩明德' },
-      'Corner Zhongshan': { x: 0.44, y: 0.44, cname: '角中山' },
-      'Tup Wanhua': { x: 0.2, y: 0.55, cname: '原岩萬華' },
-      'Corner Huashan': { x: 0.595, y: 0.515, cname: '角華山' },
-      'Tup Zhonghe': { x: 0.36, y: 0.675, cname: '原岩中和' },
-      'Tup A19': { x: 0.15, y: 0.81, cname: '原岩A19' },
-      'Tup Hsindian': { x: 0.61, y: 0.75, cname: '原岩新店' },
-      'Tup Nangang': { x: 0.86, y: 0.58, cname: '原岩南港' },
-    };
 
     // 創建城堡位置數組
     let castlePositions = [];
@@ -439,6 +468,7 @@ const Castle = ({ data, period }) => {
             hp = castle.HP ? parseInt(castle.HP) : 0;
             hp = Number.isFinite(hp) ? Math.max(0, hp) : 0;
 
+            // 使用存儲在城堡數據中的ORIGINAL_HP，避免重新計算
             originalHp = castle.ORIGINAL_HP
               ? parseInt(castle.ORIGINAL_HP)
               : 10000;
@@ -446,6 +476,8 @@ const Castle = ({ data, period }) => {
               Number.isFinite(originalHp) && originalHp > 0
                 ? originalHp
                 : 10000;
+
+            console.log(`城堡 ${castleId} 血量: ${hp}/${originalHp}`);
           } catch (e) {
             console.error('解析城堡血量時出錯:', e);
           }
@@ -456,25 +488,13 @@ const Castle = ({ data, period }) => {
             y: positionInfo.y,
             health: {
               current: hp,
-              total: originalHp,
+              total: originalHp, // 使用原始存儲的HP值
             },
             cname: positionInfo.cname,
             castleId: castleId,
           };
         })
         .filter((castle) => castle !== null); // 過濾掉null值
-    } else {
-      // 如果沒有數據，使用默認值
-      console.log('使用默認城堡位置');
-      castlePositions = Object.entries(castlePositionMap).map(
-        ([castleId, info]) => ({
-          x: info.x,
-          y: info.y,
-          health: { current: 10000, total: 10000 },
-          cname: info.cname,
-          castleId: castleId,
-        })
-      );
     }
 
     // 更新城堡位置參考
@@ -757,7 +777,7 @@ const Castle = ({ data, period }) => {
     };
 
     drawImages();
-  }, [dimensions, data, period]);
+  }, [dimensions, dataProcessed]); // 只在尺寸變化或數據處理完成時重繪
 
   // 關閉Modal
   const closeModal = () => {
@@ -819,7 +839,7 @@ const Castle = ({ data, period }) => {
                 血量: {selectedCastle.health.current} /{' '}
                 {selectedCastle.health.total}(
                 {(() => {
-                  // 安全計算百分比
+                  // 安全計算百分比，確保使用正確的數值
                   const current = Number.isFinite(selectedCastle.health.current)
                     ? selectedCastle.health.current
                     : 0;
@@ -828,6 +848,7 @@ const Castle = ({ data, period }) => {
                     selectedCastle.health.total > 0
                       ? selectedCastle.health.total
                       : 1;
+                  // 顯示到小數點後1位
                   return Math.ceil((current / total) * 1000) / 10;
                 })()}
                 %)

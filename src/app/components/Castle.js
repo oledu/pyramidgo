@@ -20,6 +20,7 @@ const Castle = ({ data, period }) => {
   const [selectedCastle, setSelectedCastle] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const castlePositionsRef = useRef([]);
+  const [castlesData, setCastlesData] = useState([]);
 
   // 根據容器設置 Canvas 尺寸
   useEffect(() => {
@@ -310,6 +311,8 @@ const Castle = ({ data, period }) => {
         if (!castle.ORIGINAL_HP) {
           castle.ORIGINAL_HP = castle.HP;
         }
+        // 初始化每個城堡的攻擊者貢獻統計
+        map[castle.CASTLE].attackers = {};
         return map;
       }, {});
 
@@ -338,7 +341,7 @@ const Castle = ({ data, period }) => {
 
             // 如果該攀岩者當天在這個健身房的計數少於5，則計算傷害
             if (dailyClimbCounter[climberKey] < 5) {
-              // 每條攀爬記錄扣20血
+              // 計算路線傷害
               if (record.SENT_COUNT && !isNaN(parseInt(record.SENT_COUNT))) {
                 // 計算實際計入的路線數（考慮每日上限）
                 const countToAdd = Math.min(
@@ -359,6 +362,12 @@ const Castle = ({ data, period }) => {
               // 更新城堡血量
               const currentHP = parseInt(castle.HP);
               castle.HP = Math.max(0, currentHP - damage).toString();
+
+              // 記錄攀岩者對該城堡的貢獻
+              if (!castle.attackers[record.CLMBR_NM]) {
+                castle.attackers[record.CLMBR_NM] = 0;
+              }
+              castle.attackers[record.CLMBR_NM] += damage;
 
               console.log(
                 `${record.CLMBR_NM} 在 ${record.GYM_NM} 造成 ${damage} 點傷害，剩餘血量: ${castle.HP}`
@@ -386,12 +395,29 @@ const Castle = ({ data, period }) => {
         ...processedCastles,
       ]);
       console.log('更新後的城堡狀態:', updatedCastles);
+      //   alert('更新後的城堡狀態:' + JSON.stringify(updatedCastles));
+      setCastlesData(updatedCastles);
     } else {
+      console.log('沒有更新城堡狀態', processedCastles);
+      console.log('沒有更新攀岩記錄', updatedCastles);
       updatedCastles = processedCastles;
+      setCastlesData(processedCastles);
     }
 
     // 創建漸變色血條的輔助函數
     function createGradient(ctx, x, y, width, height, healthPercent) {
+      // 確保所有參數都是有效的數字，防止NaN或Infinity
+      x = Number.isFinite(x) ? x : 0;
+      y = Number.isFinite(y) ? y : 0;
+      width = Number.isFinite(width) && width > 0 ? width : 1;
+      height = Number.isFinite(height) ? height : 0;
+
+      // 確保健康百分比有效
+      healthPercent = Number.isFinite(healthPercent)
+        ? Math.max(0, Math.min(1, healthPercent))
+        : 0.5;
+
+      // 創建線性漸變
       const gradient = ctx.createLinearGradient(x, y, x + width, y);
 
       // 不同健康值下的紅色系漸變
@@ -458,8 +484,24 @@ const Castle = ({ data, period }) => {
             return null;
           }
 
-          // 獲取血量，設置為current，總血量固定為10000
-          const hp = parseInt(castle.HP);
+          // 安全獲取血量，確保值是有效的數字
+          let hp = 0;
+          let originalHp = 10000; // 默認值
+
+          try {
+            hp = castle.HP ? parseInt(castle.HP) : 0;
+            hp = Number.isFinite(hp) ? Math.max(0, hp) : 0;
+
+            originalHp = castle.ORIGINAL_HP
+              ? parseInt(castle.ORIGINAL_HP)
+              : 10000;
+            originalHp =
+              Number.isFinite(originalHp) && originalHp > 0
+                ? originalHp
+                : 10000;
+          } catch (e) {
+            console.error('解析城堡血量時出錯:', e);
+          }
 
           // 返回完整的城堡位置信息
           return {
@@ -467,7 +509,7 @@ const Castle = ({ data, period }) => {
             y: positionInfo.y,
             health: {
               current: hp,
-              total: castle.ORIGINAL_HP ? parseInt(castle.ORIGINAL_HP) : hp,
+              total: originalHp,
             },
             cname: positionInfo.cname,
             castleId: castleId,
@@ -502,8 +544,17 @@ const Castle = ({ data, period }) => {
         h: 0.025,
         health: pos.health,
         render: (ctx, x, y, w, h, health) => {
-          // 計算健康百分比
-          const healthPercent = health.current / health.total;
+          // 計算健康百分比，確保數值有效
+          let current = Number.isFinite(health.current)
+            ? Math.max(0, health.current)
+            : 0;
+          let total =
+            Number.isFinite(health.total) && health.total > 0
+              ? health.total
+              : 1;
+
+          // 確保百分比在 0-1 範圍內
+          const healthPercent = Math.max(0, Math.min(1, current / total));
 
           // 1. 調整外發光效果 - 復古風格減少發光效果
           ctx.shadowColor = getHealthColor(healthPercent);
@@ -630,7 +681,11 @@ const Castle = ({ data, period }) => {
           // 6. 復古風格的百分比文字
           if (w > 30) {
             // 計算並進位到千分之一的百分比
-            const percentText = `${Math.ceil(healthPercent * 100 * 10) / 10}%`;
+            const percentValue = Math.max(
+              0,
+              Math.min(100, healthPercent * 100)
+            );
+            const percentText = `${Math.ceil(percentValue * 10) / 10}%`;
 
             ctx.fillStyle = 'rgba(255, 250, 205, 0.9)'; // 淡黃色
             ctx.font = `bold ${Math.max(8, h * 0.7)}px monospace`; // 使用等寬字體更復古
@@ -661,6 +716,7 @@ const Castle = ({ data, period }) => {
 
       try {
         for (const layer of layers) {
+          console.log('drawImages', layer);
           if (layer.type === 'rect') {
             // 繪製矩形（用於血條）
             ctx.fillStyle = layer.color;
@@ -780,12 +836,6 @@ const Castle = ({ data, period }) => {
           }
         }
 
-        // 添加城堡可點擊提示
-        ctx.font = '14px Arial';
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-        ctx.textAlign = 'center';
-        ctx.fillText('點擊城堡查看詳情', canvas.width / 2, 30);
-
         setIsLoading(false);
       } catch (error) {
         console.error('Error drawing images:', error);
@@ -822,8 +872,11 @@ const Castle = ({ data, period }) => {
 
       {/* 城堡詳情模態框 */}
       {showModal && selectedCastle && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/70">
-          <div className="bg-gray-900 border-2 border-red-800 rounded-lg p-6 max-w-md w-11/12 text-center relative">
+        <div
+          className="fixed inset-0 flex items-center justify-center z-50 bg-black/70"
+          onClick={(e) => e.target === e.currentTarget && closeModal()}
+        >
+          <div className="bg-gray-900 border-2 border-red-800 rounded-lg p-6 max-w-md w-11/12 text-center relative max-h-[80vh] overflow-y-auto">
             <button
               onClick={closeModal}
               className="absolute top-2 right-2 text-gray-400 hover:text-white text-xl"
@@ -831,27 +884,42 @@ const Castle = ({ data, period }) => {
               ✕
             </button>
 
-            <h2 className="text-xl font-bold text-red-500 mb-4">
+            <h2 className="text-xl font-bold text-red-500">
               {selectedCastle.cname}
             </h2>
 
+            {/* 添加城堡圖片 */}
+            <div className="mb-4 flex justify-center">
+              <img
+                src="/castle.png"
+                alt={`${selectedCastle.cname} 圖片`}
+                className="h-32 object-contain rounded-lg border border-red-800/50"
+              />
+            </div>
             <div className="mb-4">
               <div className="w-full bg-gray-800 rounded-full h-4 mb-2">
                 <div
                   className="bg-gradient-to-r from-red-700 to-red-500 h-4 rounded-full"
                   style={{
-                    width: `${(selectedCastle.health.current / selectedCastle.health.total) * 100}%`,
+                    width: `${Math.max(0, Math.min(100, (selectedCastle.health.current / selectedCastle.health.total) * 100))}%`,
                   }}
                 ></div>
               </div>
               <p className="text-white">
                 血量: {selectedCastle.health.current} /{' '}
                 {selectedCastle.health.total}(
-                {Math.ceil(
-                  (selectedCastle.health.current /
-                    selectedCastle.health.total) *
-                    1000
-                ) / 10}
+                {(() => {
+                  // 安全計算百分比
+                  const current = Number.isFinite(selectedCastle.health.current)
+                    ? selectedCastle.health.current
+                    : 0;
+                  const total =
+                    Number.isFinite(selectedCastle.health.total) &&
+                    selectedCastle.health.total > 0
+                      ? selectedCastle.health.total
+                      : 1;
+                  return Math.ceil((current / total) * 1000) / 10;
+                })()}
                 %)
               </p>
             </div>
@@ -875,8 +943,65 @@ const Castle = ({ data, period }) => {
               </div>
             </div>
 
+            {/* 添加攻擊者貢獻榜 */}
+            {selectedCastle &&
+              castlesData &&
+              castlesData.find((c) => c.CASTLE === selectedCastle.castleId)
+                ?.attackers && (
+                <div className="mt-4">
+                  <h3 className="text-lg font-bold text-yellow-400 mb-2">
+                    攻擊者貢獻榜
+                  </h3>
+                  <div className="bg-gray-800 p-3 rounded">
+                    {Object.entries(
+                      castlesData.find(
+                        (c) => c.CASTLE === selectedCastle.castleId
+                      ).attackers
+                    )
+                      .sort((a, b) => b[1] - a[1])
+                      .slice(0, 10)
+                      .map(([name, damage], index) => (
+                        <div
+                          key={name}
+                          className={`py-2 ${index !== 9 ? 'border-b border-gray-700' : ''} flex justify-between items-center`}
+                        >
+                          <div className="flex items-center">
+                            {index < 3 && (
+                              <span
+                                className={`
+                              w-5 h-5 rounded-full mr-2 text-xs flex items-center justify-center
+                              ${index === 0 ? 'bg-yellow-500' : index === 1 ? 'bg-gray-400' : 'bg-yellow-700'}
+                            `}
+                              >
+                                {index + 1}
+                              </span>
+                            )}
+                            <span
+                              className={
+                                index < 3
+                                  ? 'font-medium text-white'
+                                  : 'text-gray-300'
+                              }
+                            >
+                              {name}
+                            </span>
+                          </div>
+                          <span className="font-bold text-red-400">
+                            {damage} 點
+                          </span>
+                        </div>
+                      ))}
+                  </div>
+
+                  <div className="mt-2 text-xs text-gray-400 text-left">
+                    <p>• 每條路線造成 20 點傷害，每人每天最多計 5 條</p>
+                    <p>• 在主場館攀爬每日額外造成 100 點傷害</p>
+                  </div>
+                </div>
+              )}
+
             <button
-              className="bg-red-700 hover:bg-red-600 text-white font-bold py-2 px-6 rounded-full"
+              className="bg-red-700 hover:bg-red-600 text-white font-bold py-2 px-6 rounded-full mt-4"
               onClick={closeModal}
             >
               關閉

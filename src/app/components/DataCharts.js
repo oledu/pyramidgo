@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { calculateScores } from '../utils/calculateScores';
+import { calculateScoresNoLimitsGymDate } from '../utils/calculateScoresNoLimitsGymDate';
 import { calculatePompom } from '../utils/calculatePompom';
 import { calculatePompomTeam } from '../utils/calculatePompomTeam';
 import TeamPompomBubbleChart from './TeamPompomBubbleChart';
@@ -43,7 +44,10 @@ const DataCharts = ({ data, loading, error, onPeriodChange }) => {
   // console.log('settings', settings);
 
   let scores = calculateScores(data);
-  // console.log('scores', scores);
+  console.log('scores', scores);
+
+  let scoresNoLimitsGymDate = calculateScoresNoLimitsGymDate(data);
+  console.log('scoresNoLimitsGymDate', scoresNoLimitsGymDate);
 
   let pompom = calculatePompom(scores);
   // console.log('pompom', pompom);
@@ -130,7 +134,11 @@ const DataCharts = ({ data, loading, error, onPeriodChange }) => {
                           }}
                           className="p-2"
                         >
-                          <Castle data={data} period={currentPeriod} />
+                          <Castle
+                            data={data}
+                            period={currentPeriod}
+                            scoresNoLimitsGymDate={scoresNoLimitsGymDate}
+                          />
                         </div>
                         <div
                           style={{
@@ -263,7 +271,11 @@ const DataCharts = ({ data, loading, error, onPeriodChange }) => {
 
             {activeTab === 'castle' && (
               <div>
-                <Castle data={data} period={currentPeriod} />
+                <Castle
+                  data={data}
+                  period={currentPeriod}
+                  scoresNoLimitsGymDate={scoresNoLimitsGymDate}
+                />
               </div>
             )}
 

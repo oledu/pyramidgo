@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from 'react';
  * @param {Object} data - 數據物件
  * @param {string} period - 當前時期
  */
-const Castle = ({ data, period }) => {
+const Castle = ({ data, period, scoresNoLimitsGymDate }) => {
   if (period < '202504T') {
     return null;
   }
@@ -203,7 +203,11 @@ const Castle = ({ data, period }) => {
   };
 
   // 計算並更新城堡血量
-  const processCastleAttacks = (climbingRecords, castles) => {
+  const processCastleAttacks = (
+    climbingRecords,
+    castles,
+    scoresNoLimitsGymDate
+  ) => {
     if (
       !climbingRecords ||
       !Array.isArray(climbingRecords) ||
@@ -216,6 +220,7 @@ const Castle = ({ data, period }) => {
     }
 
     console.log('計算城堡攻擊', climbingRecords, castles);
+    console.log('使用scoresNoLimitsGymDate計算', scoresNoLimitsGymDate);
 
     // 創建城堡映射表，以城堡名稱為索引
     const castleMap = castles.reduce((map, castle) => {
@@ -229,72 +234,76 @@ const Castle = ({ data, period }) => {
       return map;
     }, {});
 
-    // 為了確保每天每個攀岩者在每個健身房的攀爬記錄不超過5條
-    // 創建一個計數器: "攀岩者-日期-健身房" => 已計算的路線數
-    const dailyClimbCounter = {};
+    // 如果沒有scoresNoLimitsGymDate數據，則直接返回原始城堡
+    if (
+      !scoresNoLimitsGymDate ||
+      !Array.isArray(scoresNoLimitsGymDate) ||
+      scoresNoLimitsGymDate.length === 0
+    ) {
+      console.log('沒有scoresNoLimitsGymDate數據，返回原始城堡數據');
+      return Object.values(castleMap);
+    }
 
-    // 遍歷所有攀岩記錄，計算對城堡的傷害
+    // 為了記錄每位攀岩者的主場館，創建一個映射
+    const climberHomeGymMap = {};
     climbingRecords.forEach((record) => {
-      // 確保記錄有健身房名稱且該健身房存在於城堡列表中
-      if (record.GYM_NM && castleMap[record.GYM_NM]) {
-        const castle = castleMap[record.GYM_NM];
+      if (record.isHomeGym && record.CLMBR_NM && record.GYM_NM) {
+        climberHomeGymMap[`${record.CLMBR_NM}-${record.GYM_NM}`] = true;
+      }
+    });
 
-        // 檢查攀爬記錄時間是否在城堡的START_DATE之後
-        const recordYear = '2025/'; // 假設記錄的年份是2025
-        const recordDate = new Date(recordYear + record.DATE);
-        const castleStartDate = new Date(castle.START_DATE);
+    // 遍歷所有攀岩者的得分記錄，計算對城堡的傷害
+    scoresNoLimitsGymDate.forEach((climber) => {
+      const climberName = climber.CLMBR_NM;
+      if (!climberName) return;
 
-        // 只處理城堡開放日期後的攀爬記錄
-        if (recordDate >= castleStartDate) {
-          let damage = 0;
+      // 遍歷該攀岩者的所有健身房得分
+      if (climber.GYM_DATE_SCORES) {
+        Object.entries(climber.GYM_DATE_SCORES).forEach(
+          ([gymName, dateScores]) => {
+            // 確認這個健身房是否存在於城堡列表中
+            if (castleMap[gymName]) {
+              const castle = castleMap[gymName];
 
-          // 計算攀爬記錄的指定日期在指定健身房的計數鍵
-          const climberKey = `${record.CLMBR_NM}-${record.DATE}-${record.GYM_NM}`;
-          dailyClimbCounter[climberKey] = dailyClimbCounter[climberKey] || 0;
+              // 遍歷該健身房下的所有日期得分
+              Object.entries(dateScores).forEach(([date, score]) => {
+                // 檢查攀爬記錄時間是否在城堡的START_DATE之後
+                const recordYear = '2025/'; // 假設記錄的年份是2025
+                const recordDate = new Date(recordYear + date);
+                const castleStartDate = new Date(castle.START_DATE);
 
-          // 如果該攀岩者當天在這個健身房的計數少於5，則計算傷害
-          if (dailyClimbCounter[climberKey] < 5) {
-            // 計算路線傷害
-            if (record.SENT_COUNT && !isNaN(parseInt(record.SENT_COUNT))) {
-              // 計算實際計入的路線數（考慮每日上限）
-              const countToAdd = Math.min(
-                parseInt(record.SENT_COUNT),
-                5 - dailyClimbCounter[climberKey]
-              );
-              damage += countToAdd * 20; // 每條路線20點傷害
+                // 只處理城堡開放日期後的攀爬記錄
+                if (recordDate >= castleStartDate) {
+                  // 計算傷害 - 直接使用得分作為傷害值
+                  let damage = score;
 
-              // 更新計數器
-              dailyClimbCounter[climberKey] += countToAdd;
+                  // 如果是主場館，額外扣100血
+                  if (climberHomeGymMap[`${climberName}-${gymName}`]) {
+                    damage += 100;
+                  }
+
+                  // 更新城堡血量
+                  const currentHP = parseInt(castle.HP);
+                  castle.HP = Math.max(0, currentHP - damage).toString();
+
+                  // 記錄攀岩者對該城堡的貢獻
+                  if (!castle.attackers[climberName]) {
+                    castle.attackers[climberName] = 0;
+                  }
+                  castle.attackers[climberName] += damage;
+
+                  console.log(
+                    `${climberName} 在 ${gymName} (${date}) 造成 ${damage} 點傷害，剩餘血量: ${castle.HP}`
+                  );
+                } else {
+                  console.log(
+                    `${climberName} 的攀爬記錄日期 ${date} 早於城堡 ${gymName} 的開放日期 ${castle.START_DATE}`
+                  );
+                }
+              });
             }
-
-            // 如果是主場館，額外扣100血
-            if (record.isHomeGym) {
-              damage += 100;
-            }
-
-            // 更新城堡血量
-            const currentHP = parseInt(castle.HP);
-            castle.HP = Math.max(0, currentHP - damage).toString();
-
-            // 記錄攀岩者對該城堡的貢獻
-            if (!castle.attackers[record.CLMBR_NM]) {
-              castle.attackers[record.CLMBR_NM] = 0;
-            }
-            castle.attackers[record.CLMBR_NM] += damage;
-
-            console.log(
-              `${record.CLMBR_NM} 在 ${record.GYM_NM} 造成 ${damage} 點傷害，剩餘血量: ${castle.HP}`
-            );
-          } else {
-            console.log(
-              `${record.CLMBR_NM} 當天在 ${record.GYM_NM} 已達到攀爬上限5條，不再造成傷害`
-            );
           }
-        } else {
-          console.log(
-            `${record.CLMBR_NM} 的攀爬記錄日期 ${record.DATE} 早於城堡 ${record.GYM_NM} 的開放日期 ${castle.START_DATE}`
-          );
-        }
+        );
       }
     });
 
@@ -339,7 +348,8 @@ const Castle = ({ data, period }) => {
       // 深度複製城堡數據，避免直接修改原始數據
       updatedCastles = processCastleAttacks(
         processedClimbingRecords,
-        JSON.parse(JSON.stringify(processedCastles))
+        JSON.parse(JSON.stringify(processedCastles)),
+        scoresNoLimitsGymDate
       );
       console.log('更新後的城堡狀態:', updatedCastles);
       setCastlesData(updatedCastles);
@@ -359,7 +369,7 @@ const Castle = ({ data, period }) => {
 
     // 標記數據已處理 - 確保只有數據或期間改變時才重新處理
     setDataProcessed(true);
-  }, [data, period]); // 只在數據或期間改變時重新處理
+  }, [data, period, scoresNoLimitsGymDate]); // 添加 scoresNoLimitsGymDate 作為依賴
 
   // 繪製重疊圖片，只依賴於 dimensions 和數據處理狀態
   useEffect(() => {
@@ -925,7 +935,7 @@ const Castle = ({ data, period }) => {
                   </div>
 
                   <div className="mt-2 text-xs text-gray-400 text-left">
-                    <p>• 每條路線造成 20 點傷害，每人每天最多計 5 條</p>
+                    <p>• 扣血量等同於攀爬者在該健身房的得分</p>
                     <p>• 在主場館攀爬每日額外造成 100 點傷害</p>
                   </div>
                 </div>

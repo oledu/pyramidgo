@@ -972,21 +972,17 @@ const Castle = ({ data, period, scoresNoLimitsGymDate }) => {
 
                   <div className="mt-2 text-xs text-gray-400 text-left">
                     <p className="font-bold text-yellow-300 mb-1">［岩城］</p>
-                    <p>• 爬掉路線獲得積分，造成岩城扣血。</p>
-                    <p>• 在該岩館收線得到的「積分」 = 岩城「扣血量」。</p>
-                    <p>
-                      •
-                      當岩城被攻破（=岩城血條歸零），即依個人攻城貢獻機率掉寶！
-                    </p>
+                    <p>• 爬掉路線獲得積分，造成岩城扣血。 積分 = 扣血量🩸</p>
+                    <p>• 當岩城被攻破（=血條歸零），即依個人貢獻機率掉寶！</p>
                     <p className="mt-2 font-bold text-yellow-300 mb-1">
                       ［探索岩場］
                     </p>
-                    <p>• 沒有血條，每兩週發出獎賞。</p>
+                    <p>• 沒有血條，每兩週發出挖礦獎賞。</p>
                     <p className="mt-2 text-yellow-400">
-                      ⚡ 在你的主攻岩館收線，每日攻擊加成 100滴血！
+                      ⚡ 在你的主攻岩館收線，每日攻擊+100🩸
                     </p>
                     <p className="text-yellow-400">
-                      ⚡
+                      🎁
                       當你所選的主攻岩館被打爆，將獲得主要分紅！其他冒險者一樣可助攻其他岩城、獲得小獎勵。
                     </p>
                   </div>

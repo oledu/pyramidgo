@@ -2,6 +2,9 @@ export function calculatePompomTeam(data) {
   // 建立 team 總分的 map
   const teamMap = data.reduce((map, climber) => {
     const team = climber.TEAM_NM || 'N/A'; // 確保有隊名
+    // 排除以"單人"開頭的隊伍
+    if (team.startsWith('單人')) return map;
+    
     if (!map[team]) {
       map[team] = {
         TEAM_NM: team,

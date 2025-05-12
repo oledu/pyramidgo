@@ -70,6 +70,19 @@ const Castle = ({ data, period, scoresNoLimitsGymDate }) => {
       if (clickedCastle) {
         console.log('clickedCastle', clickedCastle);
 
+        // 發送 GA 事件
+        if (typeof window !== 'undefined' && window.gtag) {
+          window.gtag('event', 'castle_click', {
+            event_category: 'castle',
+            event_label: clickedCastle.cname,
+            value: Math.round((clickedCastle.health.current / clickedCastle.health.total) * 100),
+            castle_id: clickedCastle.castleId,
+            health_percentage: Math.round((clickedCastle.health.current / clickedCastle.health.total) * 100),
+            current_health: clickedCastle.health.current,
+            total_health: clickedCastle.health.total
+          });
+        }
+
         setSelectedCastle(clickedCastle);
         setShowModal(true);
       }

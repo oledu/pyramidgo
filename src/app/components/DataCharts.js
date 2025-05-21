@@ -59,8 +59,8 @@ const DataCharts = ({ data, loading, error, onPeriodChange }) => {
 
   const tabs = [
     { id: 'overview', name: '總覽' },
-    { id: 'castle', name: '岩城尋寶' },
-    { id: 'rules', name: '岩城尋寶規則' },
+    { id: 'castle', name: '岩城奪寶' },
+    { id: 'rules', name: '遊戲規則' },
   ];
 
   const isFragment =

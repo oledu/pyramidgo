@@ -964,7 +964,7 @@ const Castle = ({ data, period, scoresNoLimitsGymDate }) => {
                             </span>
                           </div>
                           <span className="font-bold text-red-400">
-                            {damage} 🩸
+                            {parseFloat(damage.toFixed(1))} 🩸
                           </span>
                         </div>
                       ))}

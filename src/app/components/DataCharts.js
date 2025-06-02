@@ -13,6 +13,7 @@ import ClimbingDotChart from './ClimbingDotChart';
 import FragmentListChart from './FragmentListChart';
 import Castle from './Castle';
 import Rules from './Rules';
+import Prize from './Prize';
 // import Lottie from 'lottie-react';
 import dynamic from 'next/dynamic';
 import climbingAnimation from '../animations/climbing.json';
@@ -61,6 +62,7 @@ const DataCharts = ({ data, loading, error, onPeriodChange }) => {
     { id: 'overview', name: '總覽' },
     { id: 'castle', name: '岩城奪寶' },
     { id: 'rules', name: '遊戲規則' },
+    { id: 'prize', name: '得獎名單' },
   ];
 
   const isFragment =
@@ -282,6 +284,23 @@ const DataCharts = ({ data, loading, error, onPeriodChange }) => {
             {activeTab === 'rules' && (
               <div>
                 <Rules data={data} period={currentPeriod} />
+              </div>
+            )}
+
+            {activeTab === 'prize' && (
+              <div className="flex justify-center w-full">
+                <div
+                  style={{
+                    minWidth: '350px',
+                    width: '95%',
+                    maxWidth: '1600px',
+                    backgroundColor: 'rgba(137, 8, 8, 0.2)',
+                    borderRadius: '10px',
+                  }}
+                  className="p-1 md:p-5"
+                >
+                  <Prize prizeImagePath="/prize.png" />
+                </div>
               </div>
             )}
           </>

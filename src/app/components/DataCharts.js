@@ -12,6 +12,7 @@ import IndividualBldScoreStackBarChart from './IndividualBldScoreStackBarChart';
 import ClimbingDotChart from './ClimbingDotChart';
 import FragmentListChart from './FragmentListChart';
 import Castle from './Castle';
+import Castle2 from './Castle2';
 import Rules from './Rules';
 import Prize from './Prize';
 // import Lottie from 'lottie-react';
@@ -25,7 +26,7 @@ const Lottie = dynamic(() => import('lottie-react'), {
 
 const DataCharts = ({ data, loading, error, onPeriodChange }) => {
   const [activeTab, setActiveTab] = useState('overview');
-  const [currentPeriod, setCurrentPeriod] = useState('202504T');
+  const [currentPeriod, setCurrentPeriod] = useState('202505T');
 
   console.log('data', data);
 
@@ -35,7 +36,7 @@ const DataCharts = ({ data, loading, error, onPeriodChange }) => {
   };
 
   useEffect(() => {
-    if (currentPeriod < '202504T') {
+    if (currentPeriod < '202505T') {
       setActiveTab('overview');
     }
   }, [currentPeriod]);
@@ -136,11 +137,20 @@ const DataCharts = ({ data, loading, error, onPeriodChange }) => {
                           }}
                           className="p-2"
                         >
-                          <Castle
-                            data={data}
-                            period={currentPeriod}
-                            scoresNoLimitsGymDate={scoresNoLimitsGymDate}
-                          />
+                          {currentPeriod === '202505T' && (
+                            <Castle2
+                              data={data}
+                              period={currentPeriod}
+                              scoresNoLimitsGymDate={scoresNoLimitsGymDate}
+                            />
+                          )}
+                          {currentPeriod === '202504T' && (
+                            <Castle
+                              data={data}
+                              period={currentPeriod}
+                              scoresNoLimitsGymDate={scoresNoLimitsGymDate}
+                            />
+                          )}
                         </div>
                         <div
                           style={{
@@ -273,11 +283,20 @@ const DataCharts = ({ data, loading, error, onPeriodChange }) => {
 
             {activeTab === 'castle' && (
               <div>
-                <Castle
-                  data={data}
-                  period={currentPeriod}
-                  scoresNoLimitsGymDate={scoresNoLimitsGymDate}
-                />
+                {currentPeriod === '202505T' && (
+                  <Castle2
+                    data={data}
+                    period={currentPeriod}
+                    scoresNoLimitsGymDate={scoresNoLimitsGymDate}
+                  />
+                )}
+                {currentPeriod === '202504T' && (
+                  <Castle
+                    data={data}
+                    period={currentPeriod}
+                    scoresNoLimitsGymDate={scoresNoLimitsGymDate}
+                  />
+                )}
               </div>
             )}
 

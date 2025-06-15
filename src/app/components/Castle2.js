@@ -1,6 +1,8 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
 
+const devMode = true; // 或用 URL 判斷 new URLSearchParams(window.location.search).get('dev') === '1'
+
 /**
  * Castle 組件 - 使用 Canvas 實現多層 PNG 圖片重疊效果
  * @param {Object} data - 數據物件
@@ -50,11 +52,16 @@ const Castle = ({ data, period, scoresNoLimitsGymDate }) => {
   useEffect(() => {
     const handleClick = (event) => {
       if (!canvasRef.current) return;
-
-      // 獲取點擊位置相對於Canvas的座標
       const rect = canvasRef.current.getBoundingClientRect();
       const x = (event.clientX - rect.left) / rect.width;
       const y = (event.clientY - rect.top) / rect.height;
+
+      if (devMode) {
+        // 開發模式下直接顯示座標
+        // alert(`x: ${x.toFixed(3)}, y: ${y.toFixed(3)}`);
+        console.log(`{ x: ${x.toFixed(3)}, y: ${y.toFixed(3)} }`);
+        // return;
+      }
 
       // 檢查是否點擊了任何城堡
       const clickedCastle = castlePositionsRef.current.find((castle) => {
@@ -298,10 +305,8 @@ const Castle = ({ data, period, scoresNoLimitsGymDate }) => {
                   // 計算傷害 - 直接使用得分作為傷害值
                   let damage = score;
 
-                  // 如果是主場館，額外扣100血
-                  if (climberHomeGymMap[`${climberName}-${gymName}`]) {
-                    damage += 100;
-                  }
+                  // 不管如何先加100
+                  damage += 100;
 
                   // 更新城堡血量
                   const currentHP = parseInt(castle.HP);
@@ -479,21 +484,23 @@ const Castle = ({ data, period, scoresNoLimitsGymDate }) => {
 
     // 基於固定的位置信息創建城堡位置映射
     const castlePositionMap = {
-      'Tup Mingde': { x: 0.38, y: 0.32, cname: '原岩明德' },
-      'Corner Zhongshan': { x: 0.44, y: 0.44, cname: '角中山' },
-      'Tup Wanhua': { x: 0.2, y: 0.55, cname: '原岩萬華' },
-      'Corner Huashan': { x: 0.595, y: 0.515, cname: '角華山' },
-      'Tup Zhonghe': { x: 0.36, y: 0.675, cname: '原岩中和' },
-      'Tup A19': { x: 0.15, y: 0.81, cname: '原岩A19' },
-      'Tup Hsindian': { x: 0.61, y: 0.75, cname: '原岩新店' },
-      'Tup Nangang': { x: 0.86, y: 0.58, cname: '原岩南港' },
+      'Tup Mingde': { x: 0.369, y: 0.325, cname: '原岩明德' },
+      Flow: { x: 0.796, y: 0.349, cname: '心流' },
+      'Corner Zhongshan': { x: 0.43, y: 0.437, cname: '角中山' },
+      'Corner Huashan': { x: 0.593, y: 0.501, cname: '角華山' },
+      'Tup Wanhua': { x: 0.195, y: 0.535, cname: '原岩萬華' },
+      'Tup Nangang': { x: 0.859, y: 0.558, cname: '原岩南港' },
+      'Tup Zhonghe': { x: 0.352, y: 0.644, cname: '原岩中和' },
+      'Tup Hsindian': { x: 0.607, y: 0.712, cname: '原岩新店' },
+      'Tup A19': { x: 0.142, y: 0.761, cname: '原岩A19' },
+      Passion: { x: 0.301, y: 0.85, cname: '爬森' },
     };
 
     // 這裡定義要繪製的圖層
     // 每個圖層包含：圖片路徑、透明度、相對坐標和尺寸
     const layers = [
       {
-        src: '/castle_bg3.png', // 使用背景圖
+        src: '/castle_bg4.png', // 使用背景圖
         opacity: 1,
         x: 0,
         y: 0,
@@ -560,13 +567,13 @@ const Castle = ({ data, period, scoresNoLimitsGymDate }) => {
     // 更新城堡位置參考
     castlePositionsRef.current = castlePositions;
     console.log('最終的城堡位置:', castlePositions);
-
+    console.log('城堡位置:', castlePositions);
     castlePositions.forEach((pos) => {
       // 使用自定義血條
       layers.push({
         type: 'customHealthBar',
-        x: pos.x - 0.06,
-        y: pos.y + 0.08,
+        x: pos.x - 0.055,
+        y: pos.y + 0.025,
         w: 0.12,
         h: 0.025,
         health: pos.health,
@@ -906,7 +913,7 @@ const Castle = ({ data, period, scoresNoLimitsGymDate }) => {
 
             <div className="grid grid-cols-2 gap-3 mb-4">
               <div className="bg-gray-800 p-3 rounded">
-                <p className="text-gray-400 text-sm">主攻軍團</p>
+                <p className="text-gray-400 text-sm">押寶人數</p>
                 <p className="text-white font-bold">
                   {(() => {
                     // 直接使用城堡的主攻玩家数量
@@ -995,9 +1002,6 @@ const Castle = ({ data, period, scoresNoLimitsGymDate }) => {
                       ［探索岩場］
                     </p>
                     <p>• 沒有血條，每兩週發出挖礦獎賞。</p>
-                    <p className="mt-2 text-yellow-400">
-                      ⚡ 在你的主攻岩館收線，每日攻擊+100🩸
-                    </p>
                     <p className="text-yellow-400">
                       🎁
                       當你所選的主攻岩館被打爆，將獲得主要分紅！其他冒險者一樣可助攻其他岩城、獲得小獎勵。

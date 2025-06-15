@@ -995,17 +995,40 @@ const Castle = ({ data, period, scoresNoLimitsGymDate }) => {
                   </div>
 
                   <div className="mt-2 text-xs text-gray-400 text-left">
-                    <p className="font-bold text-yellow-300 mb-1">［岩城］</p>
-                    <p>• 爬掉路線獲得積分，造成岩城扣血。 積分 = 扣血量🩸</p>
-                    <p>• 當岩城被攻破（=血條歸零），即依個人貢獻機率掉寶！</p>
-                    <p className="mt-2 font-bold text-yellow-300 mb-1">
-                      ［探索岩場］
+                    <p>
+                      每次攻打岩城，即造成岩城傷害+100
+                      <br />
+                      收線越多＝對岩城傷害越大
+                      <br />
+                      岩城血條歸零 ＝ 掉寶！
                     </p>
-                    <p>• 沒有血條，每兩週發出挖礦獎賞。</p>
+                    <br />
+                    <p className="font-bold text-yellow-300 mb-1">
+                      1. 攻城挖礦
+                    </p>
+                    <p>
+                      爬掉路線獲得積分，造成岩城扣血 ⚔️
+                      <br />
+                      探索岩場 爬掉路線，等同挖礦 ⛏️{' '}
+                    </p>
+                    <br />
+                    <p className="font-bold text-yellow-300 mb-1">
+                      2. 押寶岩城 🎯{' '}
+                    </p>
+                    <p>可任選一個岩館押寶，獲得月票抽獎機會</p>
                     <p className="text-yellow-400">
-                      🎁
-                      當你所選的主攻岩館被打爆，將獲得主要分紅！其他冒險者一樣可助攻其他岩城、獲得小獎勵。
+                      ⚡ 可使用 1個 徽章碎片再加選一間岩城
                     </p>
+                    <br />
+                    <p className="font-bold text-yellow-300 mb-1">
+                      3. 掉寶分紅
+                    </p>
+                    <p>
+                      當岩城被攻破（=岩城血條歸零），
+                      <br />
+                      即依個人攻城貢獻機率掉寶 月票、紅點金、徽章碎片！
+                    </p>
+                    <p>探索岩場兩週後發出挖礦獎勵</p>
                   </div>
                 </div>
               )}

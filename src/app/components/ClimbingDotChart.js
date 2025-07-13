@@ -72,6 +72,8 @@ const ClimbingDotChart = ({ data, period }) => {
           return d3.range(11, 30).map((d) => `5/${d}`); // 5/11-5/29
         case '202505T':
           return d3.range(15, 29).map((d) => `6/${d}`); // 6/15-6/28
+        case '202506T':
+          return d3.range(12, 26).map((d) => `7/${d}`); // 7/12-7/25
         default:
           return d3.range(16, 30).map((d) => `3/${d}`); // 預設值
       }

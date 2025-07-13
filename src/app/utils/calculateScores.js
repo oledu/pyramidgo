@@ -28,7 +28,7 @@ export function calculateScores(data) {
 
   // 處理攀爬紀錄，將紀錄加到對應的參與者
   climbRecords.forEach((record) => {
-    const { CLMBR_NM, SENT_LEVEL, SENT_COUNT, SP_LEADING, SP_RP, PRIVOIUS } =
+    const { CLMBR_NM, SENT_LEVEL, SENT_COUNT, SP_LEADING, SP_RP, PRIVIOUS } =
       record;
     if (!CLMBR_NM || !SENT_LEVEL || !SENT_COUNT || PRIVIOUS === 'Y') return;
 

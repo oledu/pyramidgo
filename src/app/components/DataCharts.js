@@ -13,8 +13,6 @@ import ClimbingDotChart from './ClimbingDotChart';
 import FragmentListChart from './FragmentListChart';
 import Castle from './Castle';
 import Castle2 from './Castle2';
-import Rules from './Rules';
-import Prize from './Prize';
 // import Lottie from 'lottie-react';
 import dynamic from 'next/dynamic';
 import climbingAnimation from '../animations/climbing.json';
@@ -63,7 +61,6 @@ const DataCharts = ({ data, loading, error, onPeriodChange }) => {
     { id: 'overview', name: '總覽' },
     { id: 'castle', name: '岩城奪寶' },
     { id: 'rules', name: '遊戲規則' },
-    { id: 'prize', name: '得獎名單' },
   ];
 
   const isFragment =
@@ -301,24 +298,31 @@ const DataCharts = ({ data, loading, error, onPeriodChange }) => {
             )}
 
             {activeTab === 'rules' && (
-              <div>
-                <Rules data={data} period={currentPeriod} />
-              </div>
-            )}
-
-            {activeTab === 'prize' && (
               <div className="flex justify-center w-full">
                 <div
                   style={{
                     minWidth: '350px',
                     width: '95%',
-                    maxWidth: '1600px',
+                    maxWidth: '800px',
                     backgroundColor: 'rgba(137, 8, 8, 0.2)',
                     borderRadius: '10px',
                   }}
-                  className="p-1 md:p-5"
+                  className="p-8 md:p-12 text-center"
                 >
-                  <Prize prizeImagePath="/prize.png" />
+                  <h2 className="text-white text-2xl font-bold mb-6">
+                    遊戲規則
+                  </h2>
+                  <p className="text-gray-300 mb-8 text-lg">
+                    點擊下方按鈕查看完整遊戲規則
+                  </p>
+                  <a
+                    href="https://belaylink.my.canva.site/#welcome"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-block bg-red-700 hover:bg-red-600 text-white font-bold py-4 px-8 rounded-full text-lg transition-colors duration-200 shadow-lg hover:shadow-xl"
+                  >
+                    查看遊戲規則 →
+                  </a>
                 </div>
               </div>
             )}

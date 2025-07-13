@@ -8,7 +8,9 @@ export function calculateScores(data) {
   } = data || {};
 
   // 過濾掉 PRIVOIUS = 'Y' 的參與者
-  const filteredParticipants = participants.filter((p) => p.PRIVOIUS !== 'Y');
+  console.log('participants123', participants);
+  const filteredParticipants = participants.filter((p) => p.PRIVIOUS !== 'Y');
+  console.log('filteredParticipants123', participants);
 
   // 建立參與者的映射表
   const participantMap = filteredParticipants.reduce((map, p) => {
@@ -28,7 +30,7 @@ export function calculateScores(data) {
   climbRecords.forEach((record) => {
     const { CLMBR_NM, SENT_LEVEL, SENT_COUNT, SP_LEADING, SP_RP, PRIVOIUS } =
       record;
-    if (!CLMBR_NM || !SENT_LEVEL || !SENT_COUNT || PRIVOIUS === 'Y') return;
+    if (!CLMBR_NM || !SENT_LEVEL || !SENT_COUNT || PRIVIOUS === 'Y') return;
 
     if (!participantMap[CLMBR_NM]) {
       // 若該攀爬者不在 participants 清單，則創建一個預設對象

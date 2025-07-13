@@ -280,7 +280,7 @@ const DataCharts = ({ data, loading, error, onPeriodChange }) => {
 
             {activeTab === 'castle' && (
               <div>
-                {currentPeriod === '202505T' && (
+                {currentPeriod >= '202505T' && (
                   <Castle2
                     data={data}
                     period={currentPeriod}

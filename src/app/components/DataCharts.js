@@ -177,23 +177,7 @@ const DataCharts = ({ data, loading, error, onPeriodChange }) => {
                           </h2>
                           <PompomListChart data={pompom} />
                         </div>
-                        {isFragment ? (
-                          <div
-                            style={{
-                              minHeight: '200px',
-                              backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                              borderRadius: '8px',
-                            }}
-                            className="p-2"
-                          >
-                            <h2 className="text-white text-center text-xl font-bold mb-4">
-                              徽章碎片
-                            </h2>
-                            <FragmentListChart data={data?.fragments} />
-                          </div>
-                        ) : (
-                          <></>
-                        )}
+                        
                         <div
                           style={{
                             minHeight: '200px',
@@ -210,9 +194,6 @@ const DataCharts = ({ data, loading, error, onPeriodChange }) => {
                             settings={settings}
                           />
                         </div>
-                      </div>
-
-                      <div className="space-y-4">
                         <div
                           style={{
                             minHeight: '200px',
@@ -226,6 +207,9 @@ const DataCharts = ({ data, loading, error, onPeriodChange }) => {
                           </h2>
                           <IndividualBldScoreStackBarChart data={scores} />
                         </div>
+                      </div>
+
+                      <div className="space-y-4">
                         <div
                           style={{
                             minHeight: '200px',
@@ -254,6 +238,23 @@ const DataCharts = ({ data, loading, error, onPeriodChange }) => {
                             period={currentPeriod}
                           />
                         </div>
+                        {isFragment ? (
+                          <div
+                            style={{
+                              minHeight: '200px',
+                              backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                              borderRadius: '8px',
+                            }}
+                            className="p-2"
+                          >
+                            <h2 className="text-white text-center text-xl font-bold mb-4">
+                              徽章碎片
+                            </h2>
+                            <FragmentListChart data={data?.fragments} />
+                          </div>
+                        ) : (
+                          <></>
+                        )}
                         <div
                           style={{
                             minHeight: '300px',

@@ -24,7 +24,7 @@ const Lottie = dynamic(() => import('lottie-react'), {
 
 const DataCharts = ({ data, loading, error, onPeriodChange }) => {
   const [activeTab, setActiveTab] = useState('overview');
-  const [currentPeriod, setCurrentPeriod] = useState('202506T');
+  const [currentPeriod, setCurrentPeriod] = useState('202507T');
 
   console.log('data', data);
 
@@ -41,7 +41,6 @@ const DataCharts = ({ data, loading, error, onPeriodChange }) => {
 
   let { settings = [] } = data || {};
 
-  // console.log('settings', settings);
 
   let scores = calculateScores(data);
   console.log('scores', scores);
@@ -66,6 +65,9 @@ const DataCharts = ({ data, loading, error, onPeriodChange }) => {
   const isFragment =
     settings?.find((s) => s.KEY === 'IS_FRAGMENT')?.VALUE === 'Y';
 
+  const isOffseason =
+    settings?.find((s) => s.KEY === 'IS_OFFSEASON')?.VALUE === 'Y';
+
   if (error) return <div>Error: {error}</div>;
 
   return (
@@ -79,10 +81,9 @@ const DataCharts = ({ data, loading, error, onPeriodChange }) => {
               className={`
                 whitespace-nowrap py-3 px-2 border-b-2 font-medium text-sm
                 md:py-4 md:px-3
-                ${
-                  activeTab === tab.id
-                    ? 'border-indigo-500 text-white'
-                    : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-500'
+                ${activeTab === tab.id
+                  ? 'border-indigo-500 text-white'
+                  : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-500'
                 }
               `}
             >
@@ -149,22 +150,26 @@ const DataCharts = ({ data, loading, error, onPeriodChange }) => {
                             />
                           )}
                         </div>
-                        <div
-                          style={{
-                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                            borderRadius: '8px',
-                          }}
-                          className="p-2"
-                        >
-                          <h2 className="text-white text-center text-xl font-bold mb-4">
-                            團隊彩球
-                          </h2>
-                          <TeamPompomBubbleChart
-                            data={pompomTeam}
-                            individualData={pompom}
-                          />
-                        </div>
-                        <div
+                        {isOffseason ? (
+                          <></>
+                        ) : (
+                          <div
+                            style={{
+                              backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                              borderRadius: '8px',
+                            }}
+                            className="p-2"
+                          >
+                            <h2 className="text-white text-center text-xl font-bold mb-4">
+                              團隊彩球
+                            </h2>
+                            <TeamPompomBubbleChart
+                              data={pompomTeam}
+                              individualData={pompom}
+                            />
+                          </div>
+                        )}
+                        {isOffseason ? (<></>) : (<div
                           style={{
                             minHeight: '200px',
                             backgroundColor: 'rgba(0, 0, 0, 0.8)',
@@ -176,8 +181,27 @@ const DataCharts = ({ data, loading, error, onPeriodChange }) => {
                             個人彩球
                           </h2>
                           <PompomListChart data={pompom} />
-                        </div>
-                        
+                        </div>)}
+
+                        {isOffseason ? (<></>) : (
+                          <div
+                            style={{
+                              minHeight: '200px',
+                              backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                              borderRadius: '8px',
+                            }}
+                            className="p-2"
+                          >
+                            <h2 className="text-white text-center text-xl font-bold mb-4">
+                              抱石猛獸爭霸積分英雄榜
+                            </h2>
+                            <BeastScoreListChart
+                              data={scores}
+                              settings={settings}
+                            />
+                          </div>
+                        )}
+
                         <div
                           style={{
                             minHeight: '200px',
@@ -187,25 +211,9 @@ const DataCharts = ({ data, loading, error, onPeriodChange }) => {
                           className="p-2"
                         >
                           <h2 className="text-white text-center text-xl font-bold mb-4">
-                            抱石猛獸爭霸積分英雄榜
+                            個人抱石{isOffseason ? '次數' : '積分'}
                           </h2>
-                          <BeastScoreListChart
-                            data={scores}
-                            settings={settings}
-                          />
-                        </div>
-                        <div
-                          style={{
-                            minHeight: '200px',
-                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                            borderRadius: '8px',
-                          }}
-                          className="p-2"
-                        >
-                          <h2 className="text-white text-center text-xl font-bold mb-4">
-                            個人抱石積分
-                          </h2>
-                          <IndividualBldScoreStackBarChart data={scores} />
+                          <IndividualBldScoreStackBarChart data={scores} isOffseason={isOffseason} />
                         </div>
                       </div>
 
@@ -219,9 +227,9 @@ const DataCharts = ({ data, loading, error, onPeriodChange }) => {
                           className="p-2"
                         >
                           <h2 className="text-white text-center text-xl font-bold mb-4">
-                            個人上攀積分
+                            個人上攀{isOffseason ? '次數' : '積分'}
                           </h2>
-                          <IndividualSpScoreStackBarChart data={scores} />
+                          <IndividualSpScoreStackBarChart data={scores} isOffseason={isOffseason} />
                         </div>
                         <div
                           style={{

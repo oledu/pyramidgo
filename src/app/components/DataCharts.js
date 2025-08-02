@@ -246,7 +246,7 @@ const DataCharts = ({ data, loading, error, onPeriodChange }) => {
                             period={currentPeriod}
                           />
                         </div>
-                        {isFragment ? (
+                        {isFragment && !isOffseason ? (
                           <div
                             style={{
                               minHeight: '200px',

@@ -2,7 +2,7 @@
 import { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
 
-const IndividualSpScoreStackBarChart = ({ data }) => {
+const IndividualSpScoreStackBarChart = ({ data, isOffseason }) => {
   const containerRef = useRef(null);
   const svgRef = useRef(null);
 
@@ -10,8 +10,19 @@ const IndividualSpScoreStackBarChart = ({ data }) => {
     if (!data || !data.length) return;
 
     // 過濾並重組資料，先按隊伍分組再按分數排序
+    const isOffSeasonMode = isOffseason;
+
     const processedData = data
-      .filter((d) => d.TOTAL_SCORE_SP > 0)
+      .filter((d) => {
+        if (isOffSeasonMode) {
+          // 淡季模式：檢查是否有攀登次數
+          return Object.entries(d.climbRecordCount || {})
+            .some(([_, value]) => value.category === 'SP' && value.total > 0);
+        } else {
+          // 正常模式：檢查是否有得分
+          return d.TOTAL_SCORE_SP > 0;
+        }
+      })
       .map((d) => {
         // 找出所有運動攀登的記錄
         const spRecords = Object.entries(d.climbRecordCount)
@@ -24,11 +35,21 @@ const IndividualSpScoreStackBarChart = ({ data }) => {
           }))
           .sort((a, b) => a.score - b.score); // 改為升序排序，讓較難的等級在後面
 
+        // 計算總計值（得分或次數）
+        let totalValue;
+        if (isOffSeasonMode) {
+          // 淡季模式：計算總次數
+          totalValue = spRecords.reduce((sum, record) => sum + record.count, 0);
+        } else {
+          // 正常模式：使用總得分
+          totalValue = d.TOTAL_SCORE_SP;
+        }
+
         return {
           name: d.CLMBR_NM,
           team: d.TEAM_NM || 'Unknown',
           level: d.REG_SP_LEVEL || '', // 添加上攀等級
-          total: d.TOTAL_SCORE_SP,
+          total: totalValue,
           scores: spRecords,
         };
       })
@@ -193,14 +214,15 @@ const IndividualSpScoreStackBarChart = ({ data }) => {
 
       // 計算每個分數段的平方根比例
       const totalSqrt = d.scores.reduce(
-        (sum, score) => sum + Math.sqrt(score.scoreTotal),
+        (sum, score) => sum + Math.sqrt(isOffSeasonMode ? score.count : score.scoreTotal),
         0
       );
 
       let xPosition = 0;
       d.scores.forEach((score, i) => {
+        const valueForWidth = isOffSeasonMode ? score.count : score.scoreTotal;
         const scaledWidth =
-          totalWidth * (Math.sqrt(score.scoreTotal) / totalSqrt);
+          totalWidth * (Math.sqrt(valueForWidth) / totalSqrt);
 
         // 創建一個群組來包含矩形和互動區域
         const group = svg.append('g').attr('class', 'bar-group');
@@ -258,21 +280,31 @@ const IndividualSpScoreStackBarChart = ({ data }) => {
             }
           }
 
+          const tooltipContent = isOffSeasonMode ?
+            `<div class="text-base md:text-sm p-1">
+              <div class="text-center mb-2 border-b border-gray-600 pb-2">
+                <div class="font-bold">${d.name}</div>
+                <div class="text-sm text-gray-300">參賽組別：${d.level}</div>
+              </div>
+              <div class="mb-1">路線等級: <span class="font-bold">${score.grade}</span></div>
+              <div>完成次數: <span class="font-bold">${score.count}</span></div>
+            </div>` :
+            `<div class="text-base md:text-sm p-1">
+              <div class="text-center mb-2 border-b border-gray-600 pb-2">
+                <div class="font-bold">${d.name}</div>
+                <div class="text-sm text-gray-300">參賽組別：${d.level}</div>
+              </div>
+              <div class="mb-1">路線等級: <span class="font-bold">${score.grade}</span></div>
+              <div class="mb-1">完成次數: <span class="font-bold">${score.count}</span></div>
+              <div>得分: <span class="font-bold">${score.scoreTotal}</span></div>
+            </div>`;
+
           tooltip
             .style('opacity', 1)
             .style('display', 'block')
             .style('left', `${left}px`)
-            .style('top', `${top}px`).html(`
-              <div class="text-base md:text-sm p-1">
-                <div class="text-center mb-2 border-b border-gray-600 pb-2">
-                  <div class="font-bold">${d.name}</div>
-                  <div class="text-sm text-gray-300">參賽組別：${d.level}</div>
-                </div>
-                <div class="mb-1">路線等級: <span class="font-bold">${score.grade}</span></div>
-                <div class="mb-1">完成次數: <span class="font-bold">${score.count}</span></div>
-                <div>得分: <span class="font-bold">${score.scoreTotal}</span></div>
-              </div>
-            `);
+            .style('top', `${top}px`)
+            .html(tooltipContent);
         };
 
         const hideTooltip = () => {
@@ -340,7 +372,7 @@ const IndividualSpScoreStackBarChart = ({ data }) => {
         .attr('dy', '0.35em')
         .attr('fill', 'white')
         .style('font-size', '14px')
-        .text(Math.round(d.total));
+        .text(isOffSeasonMode ? d.total : Math.round(d.total));
 
       yPosition += barHeight + 5;
     });

@@ -2,12 +2,13 @@
 import { useState, useEffect, useRef } from 'react';
 
 const PeriodSelector = ({ onPeriodChange }) => {
-  const [selectedPeriod, setSelectedPeriod] = useState('202506T');
+  const [selectedPeriod, setSelectedPeriod] = useState('202507T');
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
   const periods = [
-    { key: '202506T', label: '航行中 2025/07/13~07/26' },
+    { key: '202507T', label: '航行中 2025/07/27~08/23' },
+    { key: '202506T', label: '已完成 2025/07/13~07/26' },
     { key: '202505T', label: '已完成 2025/06/15~06/28' },
     { key: '202504T', label: '已完成 2025/05/11~05/29' },
     { key: '202503T', label: '已完成 2025/04/06~04/19' },

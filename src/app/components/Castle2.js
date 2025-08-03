@@ -240,7 +240,8 @@ const Castle = ({ data, period, scoresNoLimitsGymDate }) => {
     climbingRecords,
     castles,
     scoresNoLimitsGymDate,
-    offseasonRecords
+    offseasonRecords,
+    originalClimbingRecords
   ) => {
     if (
       !climbingRecords ||
@@ -307,6 +308,20 @@ const Castle = ({ data, period, scoresNoLimitsGymDate }) => {
 
               // 遍歷該健身房下的所有日期得分
               Object.entries(dateScores).forEach(([date, score]) => {
+                // 檢查這個日期的記錄是否為 off_season
+                const isOffseasonRecord = originalClimbingRecords && originalClimbingRecords.some(record =>
+                  record.CLMBR_NM === climberName &&
+                  record.GYM_NM === gymName &&
+                  record.DATE === date &&
+                  record.OFF_SEASON === 'Y'
+                );
+
+                // 跳過 off_season 記錄，這些會在後面單獨處理
+                if (isOffseasonRecord) {
+                  console.log(`跳過 off_season 記錄: ${climberName} 在 ${gymName} (${date})`);
+                  return;
+                }
+
                 // 檢查攀爬記錄時間是否在城堡的START_DATE之後
                 const recordYear = '2025/'; // 假設記錄的年份是2025
                 const recordDate = new Date(recordYear + date);
@@ -486,7 +501,8 @@ const Castle = ({ data, period, scoresNoLimitsGymDate }) => {
         processedClimbingRecords,
         JSON.parse(JSON.stringify(processedCastles)),
         scoresNoLimitsGymDate,
-        offseasonRecords
+        offseasonRecords,
+        data.climbRecords
       );
       console.log('更新後的城堡狀態:', updatedCastles);
       setCastlesData(updatedCastles);
@@ -500,7 +516,8 @@ const Castle = ({ data, period, scoresNoLimitsGymDate }) => {
           [], // 空的攀爬記錄
           JSON.parse(JSON.stringify(processedCastles)),
           scoresNoLimitsGymDate,
-          offseasonRecords
+          offseasonRecords,
+          data.climbRecords
         );
         console.log('僅處理休賽季記錄後的城堡狀態:', updatedCastles);
         setCastlesData(updatedCastles);

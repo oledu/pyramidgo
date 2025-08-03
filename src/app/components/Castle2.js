@@ -13,6 +13,8 @@ const Castle = ({ data, period, scoresNoLimitsGymDate }) => {
     return null;
   }
 
+  console.log('Castle2data', data);
+
   const containerRef = useRef(null);
   const canvasRef = useRef(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
@@ -182,10 +184,17 @@ const Castle = ({ data, period, scoresNoLimitsGymDate }) => {
       return [];
     }
 
-    // 只處理有效的攀岩記錄（需要有GYM_NM和DATE）
+    // 只處理有效的攀岩記錄（需要有GYM_NM和DATE，且過濾休賽季記錄）
     const validRecords = climbingRecords.filter(
-      (record) => record.GYM_NM && record.DATE
+      (record) => record.GYM_NM && record.DATE && record.OFF_SEASON !== 'Y'
     );
+
+    // 收集休賽季記錄
+    const offseasonRecords = climbingRecords.filter(
+      (record) => record.GYM_NM && record.DATE && record.OFF_SEASON === 'Y'
+    );
+
+    console.log('offseasonRecords', offseasonRecords);
 
     // 將參與者數據轉換為以CLMBR_NM為鍵的查找映射
     const participantMap = participants.reduce((map, participant) => {
@@ -230,7 +239,8 @@ const Castle = ({ data, period, scoresNoLimitsGymDate }) => {
   const processCastleAttacks = (
     climbingRecords,
     castles,
-    scoresNoLimitsGymDate
+    scoresNoLimitsGymDate,
+    offseasonRecords
   ) => {
     if (
       !climbingRecords ||
@@ -255,6 +265,8 @@ const Castle = ({ data, period, scoresNoLimitsGymDate }) => {
       }
       // 初始化每個城堡的攻擊者貢獻統計
       map[castle.CASTLE].attackers = {};
+      // 初始化休賽季攀登者貢獻統計
+      map[castle.CASTLE].offseasonAttackers = {};
       // 初始化攻擊次數
       map[castle.CASTLE].attackCount = 0;
       return map;
@@ -336,6 +348,66 @@ const Castle = ({ data, period, scoresNoLimitsGymDate }) => {
       }
     });
 
+    // 處理休賽季記錄的攻城邏輯
+    if (offseasonRecords && Array.isArray(offseasonRecords) && offseasonRecords.length > 0) {
+      console.log('處理休賽季記錄攻城', offseasonRecords);
+
+      // 統計每個館每天的休賽季記錄數量和攀登者
+      const gymDayCounts = {};
+      const gymDayClimbers = {};
+
+      offseasonRecords.forEach((record) => {
+        const gymName = record.GYM_NM;
+        const date = record.DATE;
+        const climberName = record.CLMBR_NM;
+
+        if (!gymDayCounts[gymName]) {
+          gymDayCounts[gymName] = {};
+          gymDayClimbers[gymName] = {};
+        }
+
+        if (!gymDayCounts[gymName][date]) {
+          gymDayCounts[gymName][date] = 0;
+          gymDayClimbers[gymName][date] = new Set();
+        }
+
+        gymDayCounts[gymName][date]++;
+        if (climberName) {
+          gymDayClimbers[gymName][date].add(climberName);
+        }
+      });
+
+      // 對每個有休賽季記錄的館每天貢獻20點攻城能量
+      Object.entries(gymDayCounts).forEach(([gymName, dateCounts]) => {
+        const castle = castleMap[gymName];
+        if (castle) {
+          Object.entries(dateCounts).forEach(([date, count]) => {
+            const damage = 20; // 每天固定貢獻20點攻城能量，不管有多少筆記錄
+
+            // 更新城堡血量
+            const currentHP = parseInt(castle.HP);
+            castle.HP = Math.max(0, currentHP - damage).toString();
+
+            // 記錄休賽季攀登者的貢獻（平均分配給該日所有攀登者）
+            const climbers = Array.from(gymDayClimbers[gymName][date] || []);
+            if (climbers.length > 0) {
+              const damagePerClimber = damage / climbers.length;
+              climbers.forEach((climberName) => {
+                if (!castle.offseasonAttackers[climberName]) {
+                  castle.offseasonAttackers[climberName] = 0;
+                }
+                castle.offseasonAttackers[climberName] += damagePerClimber;
+              });
+            }
+
+            console.log(
+              `休賽季記錄：${gymName} 在 ${date} 有 ${count} 筆記錄（${climbers.length} 位攀登者），貢獻 ${damage} 點攻城能量，剩餘血量: ${castle.HP}`
+            );
+          });
+        }
+      });
+    }
+
     return Object.values(castleMap);
   };
 
@@ -397,6 +469,15 @@ const Castle = ({ data, period, scoresNoLimitsGymDate }) => {
       console.log('處理後的攀岩記錄:', processedClimbingRecords);
     }
 
+    // 獲取休賽季記錄
+    let offseasonRecords = [];
+    if (data.climbRecords) {
+      offseasonRecords = data.climbRecords.filter(
+        (record) => record.GYM_NM && record.DATE && record.OFF_SEASON === 'Y'
+      );
+      console.log('休賽季記錄:', offseasonRecords);
+    }
+
     // 更新城堡血量 - 只在有新数据时执行
     let updatedCastles = [];
     if (processedCastles.length > 0 && processedClimbingRecords.length > 0) {
@@ -404,15 +485,29 @@ const Castle = ({ data, period, scoresNoLimitsGymDate }) => {
       updatedCastles = processCastleAttacks(
         processedClimbingRecords,
         JSON.parse(JSON.stringify(processedCastles)),
-        scoresNoLimitsGymDate
+        scoresNoLimitsGymDate,
+        offseasonRecords
       );
       console.log('更新後的城堡狀態:', updatedCastles);
       setCastlesData(updatedCastles);
     } else {
       console.log('沒有更新城堡狀態', processedCastles);
       console.log('沒有更新攀岩記錄', processedClimbingRecords);
-      updatedCastles = processedCastles;
-      setCastlesData(processedCastles);
+
+      // 即使沒有正常攀爬記錄，也要處理休賽季記錄
+      if (processedCastles.length > 0 && offseasonRecords.length > 0) {
+        updatedCastles = processCastleAttacks(
+          [], // 空的攀爬記錄
+          JSON.parse(JSON.stringify(processedCastles)),
+          scoresNoLimitsGymDate,
+          offseasonRecords
+        );
+        console.log('僅處理休賽季記錄後的城堡狀態:', updatedCastles);
+        setCastlesData(updatedCastles);
+      } else {
+        updatedCastles = processedCastles;
+        setCastlesData(processedCastles);
+      }
     }
 
     // 保存处理过的数据到ref中
@@ -1029,6 +1124,69 @@ const Castle = ({ data, period, scoresNoLimitsGymDate }) => {
                       即依個人攻城貢獻機率掉寶 月票、紅點金、徽章碎片！
                     </p>
                     <p>探索岩場兩週後發出挖礦獎勵</p>
+                  </div>
+                </div>
+              )}
+
+            {/* 添加淡季英雄榜 */}
+            {selectedCastle &&
+              castlesData &&
+              castlesData.find((c) => c.CASTLE === selectedCastle.castleId)
+                ?.offseasonAttackers &&
+              Object.keys(castlesData.find((c) => c.CASTLE === selectedCastle.castleId).offseasonAttackers).length > 0 && (
+                <div className="mt-4">
+                  <h3 className="text-lg font-bold text-purple-400 mb-2">
+                    休賽季紀錄榜 🌙
+                  </h3>
+                  <div className="bg-gray-900 p-3 rounded border border-purple-500">
+                    {Object.entries(
+                      castlesData.find(
+                        (c) => c.CASTLE === selectedCastle.castleId
+                      ).offseasonAttackers
+                    )
+                      .sort((a, b) => b[1] - a[1])
+                      .slice(0, 10)
+                      .map(([name, damage], index) => (
+                        <div
+                          key={name}
+                          className={`py-2 ${index !== 9 && index !== Object.entries(castlesData.find((c) => c.CASTLE === selectedCastle.castleId).offseasonAttackers).length - 1 ? 'border-b border-purple-700' : ''} flex justify-between items-center`}
+                        >
+                          <div className="flex items-center">
+                            {index < 3 && (
+                              <span
+                                className={`
+                              w-5 h-5 rounded-full mr-2 text-xs flex items-center justify-center
+                              ${index === 0 ? 'bg-purple-500' : index === 1 ? 'bg-purple-600' : 'bg-purple-700'}
+                            `}
+                              >
+                                {index + 1}
+                              </span>
+                            )}
+                            <span
+                              className={
+                                index < 3
+                                  ? 'font-medium text-white'
+                                  : 'text-gray-300'
+                              }
+                            >
+                              {name}
+                            </span>
+                          </div>
+                          <span className="font-bold text-purple-400">
+                            {parseFloat(damage.toFixed(1))} 🌙
+                          </span>
+                        </div>
+                      ))}
+                  </div>
+
+                  <div className="mt-2 text-xs text-gray-400 text-left">
+                    <p className="text-purple-300">
+                      <strong>🌙 休賽季持續紀錄</strong>
+                      <br />
+                      鼓勵選手在休賽季期間繼續攀爬並記錄
+                      <br />
+                      每館每天貢獻20點攻城能量
+                    </p>
                   </div>
                 </div>
               )}

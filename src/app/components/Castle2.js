@@ -392,31 +392,29 @@ const Castle = ({ data, period, scoresNoLimitsGymDate }) => {
         }
       });
 
-      // 對每個有休賽季記錄的館每天貢獻20點攻城能量
+      // 對每個有休賽季記錄的攀登者每館每天貢獻20點攻城能量
       Object.entries(gymDayCounts).forEach(([gymName, dateCounts]) => {
         const castle = castleMap[gymName];
         if (castle) {
           Object.entries(dateCounts).forEach(([date, count]) => {
-            const damage = 20; // 每天固定貢獻20點攻城能量，不管有多少筆記錄
+            const climbers = Array.from(gymDayClimbers[gymName][date] || []);
+            const damagePerClimber = 20; // 每人每館每天貢獻20點攻城能量
+            const totalDamage = climbers.length * damagePerClimber;
 
             // 更新城堡血量
             const currentHP = parseInt(castle.HP);
-            castle.HP = Math.max(0, currentHP - damage).toString();
+            castle.HP = Math.max(0, currentHP - totalDamage).toString();
 
-            // 記錄休賽季攀登者的貢獻（平均分配給該日所有攀登者）
-            const climbers = Array.from(gymDayClimbers[gymName][date] || []);
-            if (climbers.length > 0) {
-              const damagePerClimber = damage / climbers.length;
-              climbers.forEach((climberName) => {
-                if (!castle.offseasonAttackers[climberName]) {
-                  castle.offseasonAttackers[climberName] = 0;
-                }
-                castle.offseasonAttackers[climberName] += damagePerClimber;
-              });
-            }
+            // 記錄休賽季攀登者的貢獻（每人貢獻20點）
+            climbers.forEach((climberName) => {
+              if (!castle.offseasonAttackers[climberName]) {
+                castle.offseasonAttackers[climberName] = 0;
+              }
+              castle.offseasonAttackers[climberName] += damagePerClimber;
+            });
 
             console.log(
-              `休賽季記錄：${gymName} 在 ${date} 有 ${count} 筆記錄（${climbers.length} 位攀登者），貢獻 ${damage} 點攻城能量，剩餘血量: ${castle.HP}`
+              `休賽季記錄：${gymName} 在 ${date} 有 ${count} 筆記錄（${climbers.length} 位攀登者），每人貢獻 ${damagePerClimber} 點，總計 ${totalDamage} 點攻城能量，剩餘血量: ${castle.HP}`
             );
           });
         }

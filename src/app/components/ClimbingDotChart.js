@@ -82,7 +82,7 @@ const ClimbingDotChart = ({ data, period }) => {
         case '202508T':
           // 8/24~9/13 跨月處理
           const augustDates2 = d3.range(24, 32).map((d) => `8/${d}`); // 8/24-8/31
-          const septemberDates = d3.range(1, 14).map((d) => `9/${d}`); // 9/1-9/13
+          const septemberDates = d3.range(1, 7).map((d) => `9/${d}`); // 9/1-9/13
           return [...augustDates2, ...septemberDates];
         default:
           return d3.range(16, 30).map((d) => `3/${d}`); // 預設值

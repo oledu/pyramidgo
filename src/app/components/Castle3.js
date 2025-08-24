@@ -373,19 +373,36 @@ const Castle3 = ({ data, period, scoresNoLimitsGymDate }) => {
         const date = record.DATE;
         const climberName = record.CLMBR_NM;
 
-        if (!gymDayCounts[gymName]) {
-          gymDayCounts[gymName] = {};
-          gymDayClimbers[gymName] = {};
-        }
+        // 檢查這個健身房是否存在於城堡列表中，並驗證日期
+        if (castleMap[gymName]) {
+          const castle = castleMap[gymName];
+          
+          // 檢查休賽季記錄時間是否在城堡的START_DATE之後
+          const recordYear = '2025/'; // 假設記錄的年份是2025
+          const recordDate = new Date(recordYear + date);
+          const castleStartDate = new Date(castle.START_DATE);
 
-        if (!gymDayCounts[gymName][date]) {
-          gymDayCounts[gymName][date] = 0;
-          gymDayClimbers[gymName][date] = new Set();
-        }
+          // 只處理城堡開放日期後的休賽季記錄
+          if (recordDate >= castleStartDate) {
+            if (!gymDayCounts[gymName]) {
+              gymDayCounts[gymName] = {};
+              gymDayClimbers[gymName] = {};
+            }
 
-        gymDayCounts[gymName][date]++;
-        if (climberName) {
-          gymDayClimbers[gymName][date].add(climberName);
+            if (!gymDayCounts[gymName][date]) {
+              gymDayCounts[gymName][date] = 0;
+              gymDayClimbers[gymName][date] = new Set();
+            }
+
+            gymDayCounts[gymName][date]++;
+            if (climberName) {
+              gymDayClimbers[gymName][date].add(climberName);
+            }
+          } else {
+            console.log(
+              `休賽季記錄：${climberName} 的記錄日期 ${date} 早於城堡 ${gymName} 的開放日期 ${castle.START_DATE}`
+            );
+          }
         }
       });
 

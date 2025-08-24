@@ -13,6 +13,7 @@ import ClimbingDotChart from './ClimbingDotChart';
 import FragmentListChart from './FragmentListChart';
 import Castle from './Castle';
 import Castle2 from './Castle2';
+import Castle3 from './Castle3';
 // import Lottie from 'lottie-react';
 import dynamic from 'next/dynamic';
 import climbingAnimation from '../animations/climbing.json';
@@ -135,7 +136,14 @@ const DataCharts = ({ data, loading, error, onPeriodChange }) => {
                           }}
                           className="p-2"
                         >
-                          {currentPeriod >= '202505T' && (
+                          {currentPeriod >= '202508T' && (
+                            <Castle3
+                              data={data}
+                              period={currentPeriod}
+                              scoresNoLimitsGymDate={scoresNoLimitsGymDate}
+                            />
+                          )}
+                          {currentPeriod >= '202505T' && currentPeriod < '202508T' && (
                             <Castle2
                               data={data}
                               period={currentPeriod}

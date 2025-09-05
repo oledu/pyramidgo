@@ -28,7 +28,7 @@ export const metadata = {
     siteName: 'PYRAMID GO',
     images: [
       {
-        url: 'https://pyramidgo.pages.dev/logo.png',
+        url: 'https://pyramidgo.pages.dev/Thumbnail.jpg',
         width: 1200,
         height: 630,
         alt: 'PYRAMID GO 攀岩金字塔俱樂部',

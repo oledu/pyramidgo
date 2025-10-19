@@ -89,6 +89,11 @@ const ClimbingDotChart = ({ data, period }) => {
           const septemberDates2 = d3.range(21, 31).map((d) => `9/${d}`); // 9/21-9/30
           const octoberDates = d3.range(1, 5).map((d) => `10/${d}`); // 10/1-10/4
           return [...septemberDates2, ...octoberDates];
+        case '202510T':
+          // 9/21~10/4 跨月處理
+          const octoberDatesDates2 = d3.range(19, 32).map((d) => `10/${d}`); // 10/19-10/31
+          const noverberDates = d3.range(1, 2).map((d) => `11/${d}`); // 11/1
+          return [...octoberDatesDates2, ...noverberDates];
         default:
           return d3.range(16, 30).map((d) => `3/${d}`); // 預設值
       }

@@ -620,7 +620,7 @@ const Castle4 = ({ data, period, scoresNoLimitsGymDate }) => {
       Passion: { x: 0.301, y: 0.723, cname: '爬森' },
       'Iclimb Shengli': { x: 0.541, y: 0.776, cname: '風城勝利' },
       'Iclimb Chenggong': { x: 0.416, y: 0.868, cname: '風城成功' },
-      'Kirin奇岩': { x: 0.842, y: 0.607, cname: '奇岩', isGhost: 'Y' },
+      'Kirin奇岩': { x: 0.842, y: 0.607, cname: '奇岩', isGhost: 'N' },
     };
 
     // 這裡定義要繪製的圖層

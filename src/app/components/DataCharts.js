@@ -26,7 +26,7 @@ const Lottie = dynamic(() => import('lottie-react'), {
 
 const DataCharts = ({ data, loading, error, onPeriodChange }) => {
   const [activeTab, setActiveTab] = useState('overview');
-  const [currentPeriod, setCurrentPeriod] = useState('202510T');
+  const [currentPeriod, setCurrentPeriod] = useState('202511T');
 
   console.log('data', data);
 

@@ -103,7 +103,7 @@ const ClimbingDotChart = ({ data, period }) => {
           // 9/21~10/4 跨月處理
           const decemberDates2 = d3.range(21, 32).map((d) => `11/${d}`); // 12/21-12/31
           const janurary = d3.range(1, 4).map((d) => `12/${d}`); // 1/01~1/06
-          return [...nevemberDatesDates2, ...decemberDates];
+          return [...decemberDates2, ...janurary];
         default:
           return d3.range(16, 30).map((d) => `3/${d}`); // 預設值
       }
@@ -116,7 +116,7 @@ const ClimbingDotChart = ({ data, period }) => {
     // 修改顏色函數，使用淺紅到深紅的漸變，超過20次使用金色
     const getColor = (value) => {
       if (value === 0) return '#1a1a2e'; // 深藍黑色背景 - 沒有完成記錄
-      if (value > 0 && value <= 5) return '#ff9999'; // 最淺紅色 - 1-5次
+      if (value > 0 && value <= 5) return '#c1a4a4ff'; // 最淺紅色 - 1-5次
       if (value > 5 && value <= 10) return '#ff4d4d'; // 淺紅色 - 6-10次
       if (value > 10 && value <= 15) return '#cc0000'; // 深紅色 - 11-15次
       if (value > 15 && value <= 20) return '#800000'; // 最深紅色 - 16-20次

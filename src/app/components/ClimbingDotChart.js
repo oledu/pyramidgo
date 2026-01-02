@@ -102,7 +102,7 @@ const ClimbingDotChart = ({ data, period }) => {
         case '202512T':
           // 9/21~10/4 跨月處理
           const decemberDates2 = d3.range(21, 32).map((d) => `12/${d}`); // 12/21-12/31
-          const janurary = d3.range(1, 4).map((d) => `01/${d}`); // 1/01~1/06
+          const janurary = d3.range(1, 4).map((d) => `1/${d}`); // 1/01~1/06
           return [...decemberDates2, ...janurary];
         default:
           return d3.range(16, 30).map((d) => `3/${d}`); // 預設值

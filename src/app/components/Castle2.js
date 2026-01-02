@@ -624,7 +624,6 @@ const Castle = ({ data, period, scoresNoLimitsGymDate }) => {
 
     // 如果有城堡數據，根據數據創建位置
     if (updatedCastles && updatedCastles.length > 0) {
-      console.log('使用城堡數據生成位置', updatedCastles);
 
       castlePositions = updatedCastles
         .map((castle) => {
@@ -676,8 +675,6 @@ const Castle = ({ data, period, scoresNoLimitsGymDate }) => {
 
     // 更新城堡位置參考
     castlePositionsRef.current = castlePositions;
-    console.log('最終的城堡位置:', castlePositions);
-    console.log('城堡位置:', castlePositions);
     castlePositions.forEach((pos) => {
       // 使用自定義血條
       layers.push({
@@ -860,7 +857,7 @@ const Castle = ({ data, period, scoresNoLimitsGymDate }) => {
 
       try {
         for (const layer of layers) {
-          console.log('drawImages', layer);
+          // console.log('drawImages', layer);
           if (layer.type === 'rect') {
             // 繪製矩形（用於血條）
             ctx.fillStyle = layer.color;

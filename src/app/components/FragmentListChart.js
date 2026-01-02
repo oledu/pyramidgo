@@ -3,7 +3,6 @@ import { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
 
 const FragmentListChart = ({ data }) => {
-  console.log('FragmentListChart data', data);
 
   const containerRef = useRef(null);
   const svgRef = useRef(null);

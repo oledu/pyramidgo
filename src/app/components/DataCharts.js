@@ -28,7 +28,7 @@ const DataCharts = ({ data, loading, error, onPeriodChange }) => {
   const [activeTab, setActiveTab] = useState('overview');
   const [currentPeriod, setCurrentPeriod] = useState('202512T');
 
-  console.log('data', data);
+  // console.log('data', data);
 
   const handlePeriodChange = (period) => {
     setCurrentPeriod(period);
@@ -45,10 +45,10 @@ const DataCharts = ({ data, loading, error, onPeriodChange }) => {
 
 
   let scores = calculateScores(data);
-  console.log('scores', scores);
+  // console.log('scores', scores);
 
   let scoresNoLimitsGymDate = calculateScoresNoLimitsGymDate(data);
-  console.log('scoresNoLimitsGymDate', scoresNoLimitsGymDate);
+  // console.log('scoresNoLimitsGymDate', scoresNoLimitsGymDate);
 
   let pompom = calculatePompom(scores);
   // console.log('pompom', pompom);

@@ -13,7 +13,7 @@ const Castle4 = ({ data, period, scoresNoLimitsGymDate }) => {
     return null;
   }
 
-  console.log('Castle4data', data);
+  // console.log('Castle4data', data);
 
   const containerRef = useRef(null);
   const canvasRef = useRef(null);
@@ -191,7 +191,7 @@ const Castle4 = ({ data, period, scoresNoLimitsGymDate }) => {
       (record) => record.GYM_NM && record.DATE && record.OFF_SEASON === 'Y'
     );
 
-    console.log('offseasonRecords', offseasonRecords);
+    // console.log('offseasonRecords', offseasonRecords);
 
     // 將參與者數據轉換為以CLMBR_NM為鍵的查找映射
     const participantMap = participants.reduce((map, participant) => {
@@ -251,8 +251,8 @@ const Castle4 = ({ data, period, scoresNoLimitsGymDate }) => {
       return castles;
     }
 
-    console.log('計算城堡攻擊', climbingRecords, castles);
-    console.log('使用scoresNoLimitsGymDate計算', scoresNoLimitsGymDate);
+    // console.log('計算城堡攻擊', climbingRecords, castles);
+    // console.log('使用scoresNoLimitsGymDate計算', scoresNoLimitsGymDate);
 
     // 創建城堡映射表，以城堡名稱為索引
     const castleMap = castles.reduce((map, castle) => {
@@ -276,7 +276,7 @@ const Castle4 = ({ data, period, scoresNoLimitsGymDate }) => {
       !Array.isArray(scoresNoLimitsGymDate) ||
       scoresNoLimitsGymDate.length === 0
     ) {
-      console.log('沒有scoresNoLimitsGymDate數據，返回原始城堡數據');
+      // console.log('沒有scoresNoLimitsGymDate數據，返回原始城堡數據');
       return Object.values(castleMap);
     }
 
@@ -315,12 +315,18 @@ const Castle4 = ({ data, period, scoresNoLimitsGymDate }) => {
 
                 // 跳過 off_season 記錄，這些會在後面單獨處理
                 if (isOffseasonRecord) {
-                  console.log(`跳過 off_season 記錄: ${climberName} 在 ${gymName} (${date})`);
+                  // console.log(`跳過 off_season 記錄: ${climberName} 在 ${gymName} (${date})`);
                   return;
                 }
 
                 // 檢查攀爬記錄時間是否在城堡的START_DATE之後
-                const recordYear = '2025/'; // 假設記錄的年份是2025
+                let recordYear = '2025/'; // 假設記錄的年份是2025
+
+                // 解析月份，若月份小於 3 (1月、2月) 則視為 2026 年
+                const month = parseInt(date.split('/')[0], 10);
+                if (month < 3) {
+                  recordYear = '2026/'
+                }
                 const recordDate = new Date(recordYear + date);
                 const castleStartDate = new Date(castle.START_DATE);
 
@@ -345,13 +351,13 @@ const Castle4 = ({ data, period, scoresNoLimitsGymDate }) => {
                   // 统计攻击次数 - 每个日期计为一次攻击
                   castle.attackCount++;
 
-                  console.log(
-                    `${climberName} 在 ${gymName} (${date}) 造成 ${damage} 點傷害，剩餘血量: ${castle.HP}`
-                  );
+                  // console.log(
+                  //   `${climberName} 在 ${gymName} (${date}) 造成 ${damage} 點傷害，剩餘血量: ${castle.HP}`
+                  // );
                 } else {
-                  console.log(
-                    `${climberName} 的攀爬記錄日期 ${date} 早於城堡 ${gymName} 的開放日期 ${castle.START_DATE}`
-                  );
+                  // console.log(
+                  //   `${climberName} 的攀爬記錄日期 ${date} 早於城堡 ${gymName} 的開放日期 ${castle.START_DATE}`
+                  // );
                 }
               });
             }
@@ -362,7 +368,7 @@ const Castle4 = ({ data, period, scoresNoLimitsGymDate }) => {
 
     // 處理休賽季記錄的攻城邏輯
     if (offseasonRecords && Array.isArray(offseasonRecords) && offseasonRecords.length > 0) {
-      console.log('處理休賽季記錄攻城', offseasonRecords);
+      // console.log('處理休賽季記錄攻城', offseasonRecords);
 
       // 統計每個館每天的休賽季記錄數量和攀登者
       const gymDayCounts = {};
@@ -400,7 +406,7 @@ const Castle4 = ({ data, period, scoresNoLimitsGymDate }) => {
             }
           } else {
             console.log(
-              `休賽季記錄：${climberName} 的記錄日期 ${date} 早於城堡 ${gymName} 的開放日期 ${castle.START_DATE}`
+              // `休賽季記錄：${climberName} 的記錄日期 ${date} 早於城堡 ${gymName} 的開放日期 ${castle.START_DATE}`
             );
           }
         }
@@ -428,7 +434,7 @@ const Castle4 = ({ data, period, scoresNoLimitsGymDate }) => {
             });
 
             console.log(
-              `休賽季記錄：${gymName} 在 ${date} 有 ${count} 筆記錄（${climbers.length} 位攀登者），每人貢獻 ${damagePerClimber} 點，總計 ${totalDamage} 點攻城能量，剩餘血量: ${castle.HP}`
+              // `休賽季記錄：${gymName} 在 ${date} 有 ${count} 筆記錄（${climbers.length} 位攀登者），每人貢獻 ${damagePerClimber} 點，總計 ${totalDamage} 點攻城能量，剩餘血量: ${castle.HP}`
             );
           });
         }
@@ -641,7 +647,6 @@ const Castle4 = ({ data, period, scoresNoLimitsGymDate }) => {
 
     // 如果有城堡數據，根據數據創建位置
     if (updatedCastles && updatedCastles.length > 0) {
-      console.log('使用城堡數據生成位置', updatedCastles);
 
       castlePositions = updatedCastles
         .map((castle) => {
@@ -694,8 +699,8 @@ const Castle4 = ({ data, period, scoresNoLimitsGymDate }) => {
 
     // 更新城堡位置參考
     castlePositionsRef.current = castlePositions;
-    console.log('最終的城堡位置:', castlePositions);
-    console.log('城堡位置:', castlePositions);
+    // console.log('最終的城堡位置:', castlePositions);
+    // console.log('城堡位置:', castlePositions);
     castlePositions.forEach((pos) => {
       // 使用自定義血條
       layers.push({
@@ -878,7 +883,7 @@ const Castle4 = ({ data, period, scoresNoLimitsGymDate }) => {
 
       try {
         for (const layer of layers) {
-          console.log('drawImages', layer);
+          // console.log('drawImages', layer);
           if (layer.type === 'rect') {
             // 繪製矩形（用於血條）
             ctx.fillStyle = layer.color;

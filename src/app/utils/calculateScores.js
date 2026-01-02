@@ -8,9 +8,9 @@ export function calculateScores(data) {
   } = data || {};
 
   // 過濾掉 PRIVOIUS = 'Y' 的參與者
-  console.log('participants123', participants);
+  // console.log('participants123', participants);
   const filteredParticipants = participants.filter((p) => p.PRIVIOUS !== 'Y');
-  console.log('filteredParticipants123', participants);
+  // console.log('filteredParticipants123', participants);
 
   // 建立參與者的映射表
   const participantMap = filteredParticipants.reduce((map, p) => {

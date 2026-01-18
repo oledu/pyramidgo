@@ -2,12 +2,12 @@
 import { useState, useEffect, useRef } from 'react';
 
 const Banner = ({ onPeriodChange }) => {
-  const [selectedPeriod, setSelectedPeriod] = useState('202512T');
+  const [selectedPeriod, setSelectedPeriod] = useState('202601T');
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
   useEffect(() => {
-    onPeriodChange('202512T');
+    onPeriodChange('202601T');
   }, []);
 
   useEffect(() => {
@@ -36,7 +36,7 @@ const Banner = ({ onPeriodChange }) => {
     '202510T',
     '202511T',
     '202512T',
-
+    '202601T',
   ];
 
   const handlePeriodSelect = (period) => {

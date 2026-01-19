@@ -104,7 +104,7 @@ const ClimbingDotChart = ({ data, period }) => {
           const decemberDates2 = d3.range(21, 32).map((d) => `12/${d}`); // 12/21-12/31
           const janurary = d3.range(1, 4).map((d) => `1/${d}`); // 1/01~1/06
           return [...decemberDates2, ...janurary];
-        case '202511T':
+        case '202601T':
           const janDates = d3.range(18, 32).map((d) => `1/${d}`); // 1/18-1/31
           return [...janDates];
         default:

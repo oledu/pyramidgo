@@ -305,7 +305,21 @@ const DataCharts = ({ data, loading, error, onPeriodChange }) => {
 
             {activeTab === 'castle' && (
               <div>
-                {currentPeriod >= '202505T' && (
+                {currentPeriod >= '202510T' && (
+                  <Castle4
+                    data={data}
+                    period={currentPeriod}
+                    scoresNoLimitsGymDate={scoresNoLimitsGymDate}
+                  />
+                )}
+                {currentPeriod >= '202508T' && currentPeriod < '202510T' && (
+                  <Castle3
+                    data={data}
+                    period={currentPeriod}
+                    scoresNoLimitsGymDate={scoresNoLimitsGymDate}
+                  />
+                )}
+                {currentPeriod >= '202505T' && currentPeriod < '202508T' && (
                   <Castle2
                     data={data}
                     period={currentPeriod}
